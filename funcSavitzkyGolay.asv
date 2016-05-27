@@ -1,4 +1,4 @@
-function matZ = funcSavitzkyGolay( matY, valOrder, valWindow )
+function matZ = funcSavitzkyGolay( matY, valS, valWindow )
 % Daniel Peirano
 % 27MAY2016
 % Coded my own version of Savitzky-Golay to address that MATLAB's version
