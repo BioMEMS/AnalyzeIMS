@@ -87,7 +87,7 @@ for countPC = 1:numComp
         tNew = matX*vecCurrLoading';
         
         vecDiff = tNew - tOld;
-        boolContinue = vecDiff'*vecDiff/(numObj*tNew'*tOld) > 10^-10;
+        boolContinue = vecDiff'*vecDiff/(tNew'*tOld) > 10^-8;
     end
     
     matX = matX - tNew*vecCurrLoading;

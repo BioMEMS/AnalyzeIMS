@@ -1,5 +1,5 @@
 # AnalyzeIMS
-AnalyzeIMS (AIMS) software developed in Cristina Davis' BioInstrumentation and BioMEMS Laboratory (http://mae.engr.ucdavis.edu/faculty/davisc/index.html). 
+AnalyzeIMS (AIMS) software developed in Prof. Cristina Davis' BioInstrumentation and BioMEMS Laboratory (http://mae.engr.ucdavis.edu/faculty/davisc/index.html). 
 
 Video demonstrating the software is available at https://youtu.be/L7k310STQmw
 
