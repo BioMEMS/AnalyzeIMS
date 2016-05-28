@@ -877,7 +877,7 @@ uicontrol(tabPreProcessing, 'Style','text', 'String','Order',...
     'HorizontalAlignment', 'left', 'Position',[.03 valHeight-.03 .05 .03 ]);
 % Smoothing Order Value
 valSmoothingOrder = uicontrol(tabPreProcessing, 'Style','edit',...
-    'String', 0,...
+    'String', 1,...
     'Units', 'normalized',...
     'Max', 1,...
     'Min', 0,...
@@ -971,7 +971,7 @@ uicontrol(tabPreProcessing, 'Style','text',...
     'Position',[.03 valHeight-.03 .05 .03 ]);
 % Baseline Order Value
 valALSOrder = uicontrol(tabPreProcessing, 'Style','edit',...
-    'String', 0,...
+    'String', 2,...
     'Units', 'normalized',...
     'Max', 1,...
     'Min', 0,...
@@ -1685,15 +1685,34 @@ function funcAddNewFiles(listAddFiles)
     
     cellTempData = [arrVC, arrTimeStamp, arrScanPos];
     
+    %Identify if files added were not read correctly (i.e. they are
+    %incomplete files)
+    vecBoolEmpty = any(cellfun(@(x) isempty(x), cellTempData),2);
+    if any(vecBoolEmpty)
+        cellTempData(vecBoolEmpty,:) = [];
+        cellStrFileRemove = cellAddFiles(vecBoolEmpty,2);
+        cellAddFiles(vecBoolEmpty,:) = [];
+        
+        strError = [sprintf('DJPWarning: Unable to correctly read file(s):\n'),...
+            strjoin(cellStrFileRemove, '\n')];
+        
+        warning(strError);
+        funcToast(strError, 'Error Reading Specific Files', 'warn')
+    end
+    assignin('base', 'cellTempData', cellTempData);
+    assignin('base', 'cellAddFiles', cellAddFiles);
     
-    currFigure = length(vecBoolDirty) + 1;
-    cellRawData = [cellRawData; cellTempData];
-    vecBoolDirty = [vecBoolDirty; true(size(cellTempData,1),1)];
-    vecBoolWorkspaceVariable = [vecBoolWorkspaceVariable;...
-        false(size(cellTempData,1),1)];
-    cellPlaylist = [cellPlaylist; cellAddFiles];
     
-    funcApplyPreProcessing;
+    if ~isempty(cellTempData)
+        currFigure = length(vecBoolDirty) + 1;
+        cellRawData = [cellRawData; cellTempData];
+        vecBoolDirty = [vecBoolDirty; true(size(cellTempData,1),1)];
+        vecBoolWorkspaceVariable = [vecBoolWorkspaceVariable;...
+            false(size(cellTempData,1),1)];
+        cellPlaylist = [cellPlaylist; cellAddFiles];
+
+        funcApplyPreProcessing;
+    end
 end
 
 function funcApplyPreProcessing
@@ -1744,6 +1763,13 @@ function funcApplyPreProcessing
     
     vecBoolDirty = false(size(vecBoolDirty));
     if ishandle(ptrPreviousToast)
+        % 5/28/2016 I seem to be having trouble pushing the primary axes
+        % back to the main axis if there is a toast.  Therefore the toast
+        % needs to be closed in order to guarantee that I can plot the
+        % data.  Probably will just have to clarify when drawing a figure
+        % each time for what axis I mean, but for now, closing the toast
+        % before proceeding.
+        
         close(ptrPreviousToast)
     end
     
