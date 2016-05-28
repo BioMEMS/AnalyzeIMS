@@ -1690,7 +1690,7 @@ function funcAddNewFiles(listAddFiles)
     vecBoolEmpty = any(cellfun(@(x) isempty(x), cellTempData),2);
     if any(vecBoolEmpty)
         cellTempData(vecBoolEmpty,:) = [];
-        cellStrFileRemove = cellAddFiles(vecBoolEmpty,2);
+        cellStrFileRemove = cellAddFiles(vecBoolEmpty,2)';
         cellAddFiles(vecBoolEmpty,:) = [];
         
         strError = [sprintf('DJPWarning: Unable to correctly read file(s):\n'),...
@@ -1699,8 +1699,7 @@ function funcAddNewFiles(listAddFiles)
         warning(strError);
         funcToast(strError, 'Error Reading Specific Files', 'warn')
     end
-    assignin('base', 'cellTempData', cellTempData);
-    assignin('base', 'cellAddFiles', cellAddFiles);
+    
     
     
     if ~isempty(cellTempData)
