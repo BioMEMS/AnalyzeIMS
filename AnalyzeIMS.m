@@ -42,7 +42,7 @@ boolEmptyPlot = true;
 
 strCommonFolder = '';
 
-strSoftwareName = 'AIMS, Version 1.12';
+strSoftwareName = 'AIMS, Version 1.2';
 
 ptrPreviousToast = -1;
 

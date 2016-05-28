@@ -15,8 +15,13 @@ function [ cubeLoadings, matScores, meanX, stdX, vecPercents ]...
 %with the training data, and then test the cubeLoadings in the calling
 %function against the testing data.
 % cubeLoadings -- Loadings object, with the first axis defining each PC
-% matScores -- Scores of object, with the first axis defining each Object (or
-% sample)
+% matScores    -- Scores of object, with the first axis defining each
+% Object (or sample)
+% vecPercents  -- Matrix with two columns.  First column contains the
+% percent of variance accounted for in the normalized matrix, and the
+% second column contains the percent of variance accounted for in the
+% non-normalized matrix (better representation of the amount of information
+% contained in each component).
 
 %Ref Paper:
 %Multi-way Principal Components and PLS Analysis
@@ -58,6 +63,7 @@ sizeX = size(cubeX);
 numObj = sizeX(1);
 matX = reshape(cubeX, numObj, numel(cubeX)/numObj);
 numVar = size(matX,2);
+initVarRaw = sum(var(matX));
 
 %Normalize
 if boolNormalize
@@ -70,9 +76,9 @@ else
 end
 
 initVar = sum(var(matX));
-matScores = zeros(10,numObj);
-cubeLoadings = zeros(10, numVar);
-vecPercents = zeros(10,1);
+matScores = zeros(100,numObj);
+cubeLoadings = zeros(100, numVar);
+vecPercents = zeros(100,2);
 
 tic;
 lastTime = 0;
@@ -95,7 +101,16 @@ for countPC = 1:numComp
     
     matScores(countPC,:) = tNew';
     cubeLoadings(countPC,:) = vecCurrLoading;
-    vecPercents(countPC) = 1-percentDone-sum(var(matX))/initVar;
+    vecPercents(countPC,1) = 1-percentDone(1)-sum(var(matX))/initVar;
+    
+    % 5/28/2016 Calculate percentage based on un-normalized data.  Previous
+    % calculation of percentage is based on that each variable is equal
+    % intensity, which may visually not make sense when identifying large
+    % peaks and removing their variance.
+    matFullX = matX .* stdX(ones(numObj,1),:);
+        %5/28/2016 Just care about relative variance, so mean isn't
+        %necessary to incorporate. 
+	vecPercents(countPC,2) = 1-percentDone(2)-sum(var(matFullX))/initVarRaw;
     
     currDiffTime = toc;
     if currDiffTime-lastTime > 1;
@@ -108,7 +123,7 @@ end
 
 matScores = matScores(1:countPC,:)';
 cubeLoadings = reshape(cubeLoadings(1:countPC,:),[countPC,sizeX(2:end)]);
-vecPercents = vecPercents(1:countPC);
+vecPercents = vecPercents(1:countPC,:);
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

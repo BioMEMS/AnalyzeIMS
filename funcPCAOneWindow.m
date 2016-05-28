@@ -37,7 +37,8 @@ for i=1:numPCs
     surf(arrCV{1}, arrRT{1}, matLoadings);
     shading interp
     
-    strTitle = sprintf('Loading PC %d, (%.2f%%)', i, vecPercents(i)*100);
+    strTitle = sprintf('Loading PC %d, (%.2f%%)', i,...
+        vecPercents(i,2)*100);
     title(strTitle);
     
     if i== 1
@@ -59,8 +60,8 @@ text(matScores(:,valComp1), matScores(:,valComp2), cellLabels,...
     'horizontal','left', 'vertical','bottom')
 
 title('Principal Component Scores');
-xlabel(sprintf('PC 1 (%.2f%%)', vecPercents(1)*100));
-ylabel(sprintf('PC 2 (%.2f%%)', vecPercents(2)*100));
+xlabel(sprintf('PC 1 (%.2f%%)', vecPercents(1,2)*100));
+ylabel(sprintf('PC 2 (%.2f%%)', vecPercents(2,2)*100));
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
