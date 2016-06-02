@@ -74,7 +74,7 @@ for i=1:numComp
     surf(arrCV{1}, arrRT{1}, matLoadings);
     shading interp
     
-    strTitle = sprintf('LV %d, (%.2f%%)', i, vecPercents(i)*100);
+    strTitle = sprintf('LV %d, (%.2f%%)', i, vecPercents(i,2)*100);
     title(strTitle);
 
     view(0,90);
@@ -104,8 +104,8 @@ for i=1:length(cellUnique)
     hold on
 end
 
-xlabel(sprintf('LV 1 (%.2f%%)', vecPercents(1)*100));
-ylabel(sprintf('LV 2 (%.2f%%)', vecPercents(2)*100));
+xlabel(sprintf('LV 1 (%.2f%%)', vecPercents(1,2)*100));
+ylabel(sprintf('LV 2 (%.2f%%)', vecPercents(2,2)*100));
 
 legend(vecHeaders, cellUnique)
 

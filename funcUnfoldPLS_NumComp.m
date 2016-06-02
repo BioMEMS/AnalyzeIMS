@@ -41,6 +41,7 @@ sizeX = size(cubeX);
 numObj = sizeX(1);
 matX = reshape(cubeX, numObj, numel(cubeX)/numObj);
 numVar = size(matX,2);
+initVarRaw = sum(var(matX));
 
 %Normalize
 if boolNormalize
@@ -66,7 +67,7 @@ vecB = zeros(numComp,1);
 
 tic;
 lastTime = 0;
-vecPercents = zeros(numComp, 1);
+vecPercents = zeros(numComp, 2);
 initVar = sum(var(matX));
 
 for countPC = 1:numComp
@@ -109,8 +110,19 @@ for countPC = 1:numComp
         
         lastTime = currDiffTime;
     end
+    
     percentDone = sum(vecPercents);
-    vecPercents(countPC) = 1-percentDone-sum(var(matX))/initVar;
+    vecPercents(countPC, 1) = 1-percentDone(1)-sum(var(matX))/initVar;
+    
+    % 5/28/2016 Calculate percentage based on un-normalized data.  Previous
+    % calculation of percentage is based on that each variable is equal
+    % intensity, which may visually not make sense when identifying large
+    % peaks and removing their variance.
+    matFullX = matX .* stdX(ones(numObj,1),:);
+        %5/28/2016 Just care about relative variance, so mean isn't
+        %necessary to incorporate. 
+	vecPercents(countPC,2) = 1-percentDone(2)-sum(var(matFullX))/initVarRaw;
+    
     
     vecB(countPC) = b;
 end
