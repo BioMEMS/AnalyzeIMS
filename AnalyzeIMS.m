@@ -1683,7 +1683,7 @@ function funcAddNewFiles(listAddFiles)
 %     for i=1:numFiles
 %         tempFiles{i} = [cellAddFiles{i,2}, extPosNeg];
 %     end
-    [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(tempFiles);
+    [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(cellAddFiles(:,2));
     
     cellTempData = [arrVC, arrTimeStamp, arrScanPos];
     
