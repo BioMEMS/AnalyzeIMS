@@ -37,7 +37,6 @@ cellData = {};
 currFigure = 1;
 
 vecSortColumns = [0, 0, 1, 0];
-extPosNeg = '_POS.XLS';
 boolEmptyPlot = true;
 
 strCommonFolder = '';
@@ -402,7 +401,6 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Clear'
         currFigure = 1;
 
         vecSortColumns = [0, 0, 1, 0];
-        extPosNeg = '_POS.XLS';
         boolEmptyPlot = true;
 
         strCommonFolder = '';   
@@ -695,19 +693,20 @@ checkboxAllNone = uicontrol(tabData, 'Style','checkbox', 'Visible', 'off',...
         val = get(checkboxAllNone, 'Value');
         
         matCurrHighlighted = get(objTableMain, 'UserData');
-        vecBoolCurrCol = logical(matCurrHighlighted(:,2)==2);
-        matCurrHighlighted = matCurrHighlighted(vecBoolCurrCol,:);
-        
-        if size(matCurrHighlighted,1) > 1
-            for i=1:size(matCurrHighlighted,1)
-                cellPlaylist{matCurrHighlighted(i,1),1} = logical(val);
-            end
-        else
-            for i=1:size(cellPlaylist,1)
-                cellPlaylist{i,1} = logical(val);
-            end
-        end      
+        if ~isempty(matCurrHighlighted) %Check that it hasn't been cleared
+            vecBoolCurrCol = logical(matCurrHighlighted(:,2)==2);
+            matCurrHighlighted = matCurrHighlighted(vecBoolCurrCol,:);
 
+            if size(matCurrHighlighted,1) > 1
+                for i=1:size(matCurrHighlighted,1)
+                    cellPlaylist{matCurrHighlighted(i,1),1} = logical(val);
+                end
+            else
+                for i=1:size(cellPlaylist,1)
+                    cellPlaylist{i,1} = logical(val);
+                end
+            end
+        end
 
         funcRefreshPlaylist
     end
@@ -1921,7 +1920,7 @@ function funcRefreshPlaylist()
         ylim([valMinRT valMaxRT]);
         zlim([valMinZ valMaxZ]);
         strTitle = sprintf('Sample %d,  %s', currFigure,...
-            [cellPlaylist{currFigure,2}, extPosNeg]);
+            cellPlaylist{currFigure,2});
         caxis([valMinZ, valMaxZ]);
         set(textCurrFile, 'String', strTitle);
         boolEmptyPlot = false;
