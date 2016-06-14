@@ -341,6 +341,7 @@ buttDumpVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normali
         
         assignin('base', 'cellPlaylist', cellPlaylist(vecUsed,:));
         assignin('base', 'cellData', cellData(vecUsed,:));
+        assignin('base', 'cellRawData', cellRawData(vecUsed,:));
         assignin('base', 'valRTMin', str2double(get(valRTMin, 'String')) );
         assignin('base', 'valRTMax', str2double(get(valRTMax, 'String')) );
         assignin('base', 'valCVMin', str2double(get(valCVMin, 'String')) );
@@ -1684,7 +1685,7 @@ function funcAddNewFiles(listAddFiles)
 %     end
     [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(cellAddFiles(:,2));
     
-    cellTempData = [arrVC, arrTimeStamp, arrScanPos];
+    cellTempData = [arrVC, arrTimeStamp, arrScanPos, arrScanNeg];
     
     %Identify if files added were not read correctly (i.e. they are
     %incomplete files)
