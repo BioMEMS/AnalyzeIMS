@@ -1677,11 +1677,13 @@ function funcAddNewFiles(listAddFiles)
         end
     end
     
-    tempFiles = cell(size(cellAddFiles,1),1);
-    for i=1:numFiles
-        tempFiles{i} = [cellAddFiles{i,2}, extPosNeg];
-    end
-    [arrVC, arrTimeStamp, arrScanPos] = funcScanData(tempFiles);
+    % 20160604 Commenting out these lines to allow funcScanData to return
+    % positive and negative scans
+%     tempFiles = cell(size(cellAddFiles,1),1);
+%     for i=1:numFiles
+%         tempFiles{i} = [cellAddFiles{i,2}, extPosNeg];
+%     end
+    [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(tempFiles);
     
     cellTempData = [arrVC, arrTimeStamp, arrScanPos];
     

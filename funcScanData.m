@@ -1,4 +1,11 @@
-function [arrVC, arrTimeStamp, arrScanPos] = funcScanData(listFiles)
+function [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(listFiles)
+
+% 20160614 Modified the function to automatically include negative spectra
+% and therefore modified how the list of files came in to the function so
+% that "_POS.XLS" wasn't assumed to already be present, but was appended
+% alongside of "_NEG.XLS".  There may have to be some way of finding lower
+% case versions of this, and also scanning only positive spectra (i.e. a
+% flag) in the future.
 
 numPOS = length(listFiles);
 disp(numPOS);
@@ -6,14 +13,32 @@ disp(numPOS);
 arrVC = cell(numPOS, 1);
 arrTimeStamp = cell(numPOS, 1);
 arrScanPos = cell(numPOS, 1);
+arrScanNeg = cell(numPOS, 1);
 
 %Load Data
 for i=1:numPOS
     try
-        [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}] = DMSRead(listFiles{i});
+            
+        [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
+            = DMSRead([listFiles{i}, '_POS.XLS']);
+        [vecVCTest, vecTSTest, arrScanNeg{i}]...
+            = DMSRead([listFiles{i}, '_NEG.XLS']);
+        if ~(all(vecVCTest == arrVC{i})) || ~(all(vecTSTest == arrTimeStamp))
+            warning('funcScanData:DMSReadFail',...
+                'DMSRead failed on file (Pos/Neg VC or Time Stamp Not Equal): \n %s \n',...
+                listFiles{i})
+            arrVC{i} = [];
+            arrTimeStamp{i} = [];
+            arrScanPos{i} = [];
+            arrScanNeg{i} = [];
+        end
     catch err %#ok<NASGU>
         warning('funcScanData:DMSReadFail',...
-            'DMSRead failed on file: %s \n', listFiles{i})
+            'DMSRead failed on file: \n %s \n', listFiles{i})
+        arrVC{i} = [];
+        arrTimeStamp{i} = [];
+        arrScanPos{i} = [];
+        arrScanNeg{i} = [];
         
         %Trust empty scan to be caught and properly handled outside of
         %function (Currently don't have a file to test this...)
