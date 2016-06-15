@@ -120,11 +120,11 @@ buttonToggleButton = uicontrol('Style','togglebutton', 'Value', 1,...
     function buttViewRawData_Callback(~,~)
         boolGoingToRaw = get(buttonToggleButton, 'value');
         if ~boolGoingToRaw && boolPreProcessingContainsBaseline
-            set(valZMin, 'String', num2str(valPreProcZMin));
-            set(valZMax, 'String', num2str(valZOffset+valPreProcZMin));
+            set(valZMinPos, 'String', num2str(valPreProcZMin));
+            set(valZMaxPos, 'String', num2str(valZOffset+valPreProcZMin));
         elseif boolPreProcessingContainsBaseline
-            set(valZMin, 'String', num2str(valRawZMin));
-            set(valZMax, 'String', num2str(valRawZMin+valZOffset));
+            set(valZMinPos, 'String', num2str(valRawZMin));
+            set(valZMaxPos, 'String', num2str(valRawZMin+valZOffset));
         end
         funcRefreshPlaylist()
     end
@@ -158,26 +158,26 @@ uicontrol('Style','text', 'String','CV Range:', 'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
     'Position',[.405 .84 .04 .03 ]);
 
-valCVMax = uicontrol('Style','edit', 'String', 20, 'Units', 'normalized',...
+valCVMaxPos = uicontrol('Style','edit', 'String', 20, 'Units', 'normalized',...
     'Max', 1, 'Min', 0, 'Position',[.445 .86 .05 .03 ],...
     'Callback',{@editCVMax});
     function editCVMax(~, ~)
-        valMax = str2double(get(valCVMax, 'String'));
-        valMin = str2double(get(valCVMin, 'String'));
+        valMax = str2double(get(valCVMaxPos, 'String'));
+        valMin = str2double(get(valCVMinPos, 'String'));
         if valMax < valMin+5
-            set(valCVMax, 'String', num2str(valMin+5));
+            set(valCVMaxPos, 'String', num2str(valMin+5));
         end
         funcRefreshPlaylist;
     end
 
-valCVMin = uicontrol('Style','edit', 'String', -45, 'Units', 'normalized',...
+valCVMinPos = uicontrol('Style','edit', 'String', -45, 'Units', 'normalized',...
     'Max', 1, 'Min', 0, 'Position', [.445 .82 .05 .03 ],...
     'Callback', {@editCVMin});
     function editCVMin(~, ~)
-        valMax = str2double(get(valCVMax, 'String'));
-        valMin = str2double(get(valCVMin, 'String'));
+        valMax = str2double(get(valCVMaxPos, 'String'));
+        valMin = str2double(get(valCVMinPos, 'String'));
         if valMax < valMin+5
-            set(valCVMin, 'String', num2str(valMax-5));
+            set(valCVMinPos, 'String', num2str(valMax-5));
         end
         funcRefreshPlaylist;
     end
@@ -189,26 +189,26 @@ uicontrol('Style','text', 'String', 'RT Range:', 'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
     'Position', [.405 .74 .04 .03 ]);
 
-valRTMax = uicontrol('Style','edit', 'String', 800, 'Units', 'normalized',...
+valRTMaxPos = uicontrol('Style','edit', 'String', 800, 'Units', 'normalized',...
     'Max', 1, 'Min', 0, 'Position', [.445 .76 .05 .03 ],...
     'Callback',{@editRTMax});
     function editRTMax(~, ~)
-        valMax = str2double(get(valRTMax, 'String'));
-        valMin = str2double(get(valRTMin, 'String'));
+        valMax = str2double(get(valRTMaxPos, 'String'));
+        valMin = str2double(get(valRTMinPos, 'String'));
         if valMax < valMin+5
-            set(valRTMax, 'String', num2str(valMin+5));
+            set(valRTMaxPos, 'String', num2str(valMin+5));
         end
         funcRefreshPlaylist;
     end
 
-valRTMin = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
+valRTMinPos = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
     'Max', 1, 'Min', 0, 'Position', [.445 .72 .05 .03 ],...
     'Callback',{@editRTMin});
     function editRTMin(~, ~)
-        valMax = str2double(get(valRTMax, 'String'));
-        valMin = str2double(get(valRTMin, 'String'));
+        valMax = str2double(get(valRTMaxPos, 'String'));
+        valMin = str2double(get(valRTMinPos, 'String'));
         if valMax < valMin+5
-            set(valRTMin, 'String', num2str(valMax-5));
+            set(valRTMinPos, 'String', num2str(valMax-5));
         end
         funcRefreshPlaylist;
     end
@@ -220,26 +220,26 @@ uicontrol('Style','text', 'String','Z Range:', 'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
     'Position',[.405 .64 .04 .03 ]);
 
-valZMax = uicontrol('Style','edit', 'String', 0.5, 'Units', 'normalized',...
+valZMaxPos = uicontrol('Style','edit', 'String', 0.5, 'Units', 'normalized',...
     'Max', 1, 'Min', 0, 'Position', [.445 .66 .05 .03 ],...
     'Callback',{@editZMax});
     function editZMax(~, ~)
-        valMax = str2double(get(valZMax, 'String'));
-        valMin = str2double(get(valZMin, 'String'));
+        valMax = str2double(get(valZMaxPos, 'String'));
+        valMin = str2double(get(valZMinPos, 'String'));
         if valMax < valMin+.001
-            set(valZMax, 'String', num2str(valMin+.001));
+            set(valZMaxPos, 'String', num2str(valMin+.001));
         end
         funcRefreshPlaylist;
     end
 
-valZMin = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
+valZMinPos = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
     'Max', 1, 'Min', 0, 'Position', [.445 .62 .05 .03 ],...
     'Callback',{@editZMin});
     function editZMin(~, ~)
-        valMax = str2double(get(valZMax, 'String'));
-        valMin = str2double(get(valZMin, 'String'));
+        valMax = str2double(get(valZMaxPos, 'String'));
+        valMin = str2double(get(valZMinPos, 'String'));
         if valMax < valMin+.001
-            set(valZMin, 'String', num2str(valMax-.001));
+            set(valZMinPos, 'String', num2str(valMax-.001));
         end
         funcRefreshPlaylist;
     end
@@ -255,10 +255,10 @@ buttPCA = uicontrol('Style','pushbutton', 'Units', 'normalized',...
     'Position',[.40666 .56 .04 .03], 'BackgroundColor', colorGrey,...
     'Callback',{@buttPCA_Callback}); %#ok<NASGU>
     function buttPCA_Callback(~, ~)
-        valCVHigh = str2double(get(valCVMax, 'String'));
-        valCVLow = str2double(get(valCVMin, 'String'));
-        valRTHigh = str2double(get(valRTMax, 'String'));
-        valRTLow = str2double(get(valRTMin, 'String'));
+        valCVHigh = str2double(get(valCVMaxPos, 'String'));
+        valCVLow = str2double(get(valCVMinPos, 'String'));
+        valRTHigh = str2double(get(valRTMaxPos, 'String'));
+        valRTLow = str2double(get(valRTMinPos, 'String'));
         vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
         cellLabels = num2str(find(vecUsed), '%d');
         funcPCAOneWindow(cellData(vecUsed,:),...
@@ -342,10 +342,10 @@ buttDumpVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normali
         assignin('base', 'cellPlaylist', cellPlaylist(vecUsed,:));
         assignin('base', 'cellData', cellData(vecUsed,:));
         assignin('base', 'cellRawData', cellRawData(vecUsed,:));
-        assignin('base', 'valRTMin', str2double(get(valRTMin, 'String')) );
-        assignin('base', 'valRTMax', str2double(get(valRTMax, 'String')) );
-        assignin('base', 'valCVMin', str2double(get(valCVMin, 'String')) );
-        assignin('base', 'valCVMax', str2double(get(valCVMax, 'String')) );
+        assignin('base', 'valRTMinPos', str2double(get(valRTMinPos, 'String')) );
+        assignin('base', 'valRTMaxPos', str2double(get(valRTMaxPos, 'String')) );
+        assignin('base', 'valCVMinPos', str2double(get(valCVMinPos, 'String')) );
+        assignin('base', 'valCVMaxPos', str2double(get(valCVMaxPos, 'String')) );
         assignin('base', 'cellCategories', cellCategories( numBaseCol+1:end));
         assignin('base', 'cellClassifications', cellPlaylist(vecUsed, numBaseCol+1:end));
         assignin('base', 'strBlank', strBlank);
@@ -619,17 +619,17 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load M
         end
         
         %Setup the Viewer
-        set(valCVMax, 'String', fileData.strCVMax);
-        set(valCVMin, 'String', fileData.strCVMin);
-        set(valRTMax, 'String', fileData.strRTMax);
-        set(valRTMin, 'String', fileData.strRTMin);
+        set(valCVMaxPos, 'String', fileData.strCVMax);
+        set(valCVMinPos, 'String', fileData.strCVMin);
+        set(valRTMaxPos, 'String', fileData.strRTMax);
+        set(valRTMinPos, 'String', fileData.strRTMin);
         
         %The following dancing allows for the user to view raw data without
         %messing up their view port, but still getting it close to what
         %should be expected viewing.
         valZOffset = str2double(fileData.strZMax)-str2double(fileData.strZMin);
-        set(valZMax, 'String', sprintf('%.4f', valZOffset...
-            +str2double(get(valZMin, 'String'))));
+        set(valZMaxPos, 'String', sprintf('%.4f', valZOffset...
+            +str2double(get(valZMinPos, 'String'))));
         
         %Setup the PreProcessing
         cellTempPreProcessing = fileData.cellPreProcessing;
@@ -660,10 +660,10 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load M
         vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
         
         cubeX = funcCellToCube(cellData(vecUsed,:),...
-            str2double(get(valCVMin, 'String')),...
-            str2double(get(valCVMax, 'String')),...
-            str2double(get(valRTMin, 'String')),...
-            str2double(get(valRTMax, 'String')),...
+            str2double(get(valCVMinPos, 'String')),...
+            str2double(get(valCVMaxPos, 'String')),...
+            str2double(get(valRTMinPos, 'String')),...
+            str2double(get(valRTMaxPos, 'String')),...
             size(cellModelInformation{2,1}, 3),...
             size(cellModelInformation{2,1}, 2) );
         
@@ -1252,10 +1252,10 @@ uicontrol(tabModel, 'Style','pushbutton',...
         
         [cellCategoryInfo, cellModelInformation]...
             = funcHandleNPLS(cellCurr,...
-            str2double(get(valRTMin, 'String')),...
-            str2double(get(valRTMax, 'String')),...
-            str2double(get(valCVMin, 'String')),...
-            str2double(get(valCVMax, 'String')),...
+            str2double(get(valRTMinPos, 'String')),...
+            str2double(get(valRTMaxPos, 'String')),...
+            str2double(get(valCVMinPos, 'String')),...
+            str2double(get(valCVMaxPos, 'String')),...
             cellCategories( numBaseCol+1:end),...
             cellPlaylist(vecUsed, numBaseCol+1:end),...
             strBlank,...
@@ -1283,12 +1283,12 @@ uicontrol(tabModel, 'Style','pushbutton',...
                 return
             end
 
-            strCVMax = get(valCVMax, 'String'); %#ok<NASGU>
-            strCVMin = get(valCVMin, 'String'); %#ok<NASGU>
-            strRTMax = get(valRTMax, 'String'); %#ok<NASGU>
-            strRTMin = get(valRTMin, 'String'); %#ok<NASGU>
-            strZMax = get(valZMax, 'String'); %#ok<NASGU>
-            strZMin = get(valZMin, 'String'); %#ok<NASGU>
+            strCVMax = get(valCVMaxPos, 'String'); %#ok<NASGU>
+            strCVMin = get(valCVMinPos, 'String'); %#ok<NASGU>
+            strRTMax = get(valRTMaxPos, 'String'); %#ok<NASGU>
+            strRTMin = get(valRTMinPos, 'String'); %#ok<NASGU>
+            strZMax = get(valZMaxPos, 'String'); %#ok<NASGU>
+            strZMin = get(valZMinPos, 'String'); %#ok<NASGU>
 
             save(strFilename{1}, 'strCVMax', 'strCVMin', 'strRTMax', 'strRTMin',...
                 'strZMax', 'strZMin', 'cellPreProcessing', 'cellCategoryInfo',...
@@ -1584,10 +1584,10 @@ panelPredictionClassificationInfo = uipanel(tabPrediction,...
             cellModel = cellCategoryInfo{2,indxCurrCategory}(indxCurrClassification);
             strModel = cellModel{1};
             
-            valCVHigh = str2double(get(valCVMax, 'String'));
-            valCVLow = str2double(get(valCVMin, 'String'));
-            valRTHigh = str2double(get(valRTMax, 'String'));
-            valRTLow = str2double(get(valRTMin, 'String'));
+            valCVHigh = str2double(get(valCVMaxPos, 'String'));
+            valCVLow = str2double(get(valCVMinPos, 'String'));
+            valRTHigh = str2double(get(valRTMaxPos, 'String'));
+            valRTLow = str2double(get(valRTMinPos, 'String'));
             vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
             cellLabels = num2str(find(vecUsed), '%d'); 
             
@@ -1781,11 +1781,11 @@ function funcApplyPreProcessing
     end
     
     if boolAxisRangesSet && boolPreProcessingContainsBaseline
-        set(valZMin, 'String', '0');
-        set(valZMax, 'String', num2str(valZOffset));
+        set(valZMinPos, 'String', '0');
+        set(valZMaxPos, 'String', num2str(valZOffset));
     elseif boolAxisRangesSet
-        set(valZMin, 'String', num2str(valRawZMin));
-        set(valZMax, 'String', num2str(valRawZMin+valZOffset));
+        set(valZMinPos, 'String', num2str(valRawZMin));
+        set(valZMaxPos, 'String', num2str(valRawZMin+valZOffset));
     end
     
     if size(cellPreProcessing,1) > 0
@@ -1800,12 +1800,12 @@ end
 
 function funcSetMaxes()
     if ~isempty(cellData)
-        set(valCVMax, 'String', num2str(max(cellfun(@max, cellData(:,1)))));
-        set(valCVMin, 'String', num2str(min(cellfun(@min, cellData(:,1)))));
-        set(valRTMax, 'String', num2str(max(cellfun(@max, cellData(:,2)))));
-        set(valRTMin, 'String', num2str(min(cellfun(@min, cellData(:,2)))));
-        set(valZMax, 'String', num2str(max(cellfun(@(x) max(max(x)), cellData(:,3)))));
-        set(valZMin, 'String', num2str(min(cellfun(@(x) min(min(x)), cellData(:,3)))));
+        set(valCVMaxPos, 'String', num2str(max(cellfun(@max, cellData(:,1)))));
+        set(valCVMinPos, 'String', num2str(min(cellfun(@min, cellData(:,1)))));
+        set(valRTMaxPos, 'String', num2str(max(cellfun(@max, cellData(:,2)))));
+        set(valRTMinPos, 'String', num2str(min(cellfun(@min, cellData(:,2)))));
+        set(valZMaxPos, 'String', num2str(max(cellfun(@(x) max(max(x)), cellData(:,3)))));
+        set(valZMinPos, 'String', num2str(min(cellfun(@(x) min(min(x)), cellData(:,3)))));
         boolAxisRangesSet = true;
         
         valRawZMax = max(cellfun(@(x) max(max(x)), cellRawData(:,3)));
@@ -1877,12 +1877,12 @@ function funcRefreshPlaylist()
             currData = cellData(currFigure,:);
         end
         
-        valMinCV = str2double(get(valCVMin, 'String'));
-        valMaxCV = str2double(get(valCVMax, 'String'));
-        valMinRT = str2double(get(valRTMin, 'String'));
-        valMaxRT = str2double(get(valRTMax, 'String'));
-        valMinZ = str2double(get(valZMin, 'String'));
-        valMaxZ = str2double(get(valZMax, 'String'));
+        valMinCV = str2double(get(valCVMinPos, 'String'));
+        valMaxCV = str2double(get(valCVMaxPos, 'String'));
+        valMinRT = str2double(get(valRTMinPos, 'String'));
+        valMaxRT = str2double(get(valRTMaxPos, 'String'));
+        valMinZ = str2double(get(valZMinPos, 'String'));
+        valMaxZ = str2double(get(valZMaxPos, 'String'));
 
         indxMinCV = find(currData{1}>valMinCV, 1, 'first');
         indxMaxCV = find(currData{1}<valMaxCV, 1, 'last');
