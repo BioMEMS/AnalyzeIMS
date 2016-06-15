@@ -151,29 +151,38 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','>>',...
         funcChangeSample(+1);
     end
 
+
+%%%%%%%%%%%%%%%%%%%%%
+% Panel for Ranges
+panelRange = uipanel('BackgroundColor', colorGrey,...
+    'Position', [0.405 0.58 0.1 0.32]);
+% Following values are connected and need to be corrected all at the same
+% time.
+valFieldHeight = 0.08;
+valFieldWidth = 0.4;
+valLeftStart = 0.05;
+valRightStart = 0.55;
+
+%%%%%%%%%%%%%%%%%%%%%
+% Pos/Neg Titles
+uicontrol(panelRange, 'Style','text', 'String', 'Neg', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'FontWeight', 'bold', 'Position',[0 .91 .5 .06 ]);
+
+uicontrol(panelRange, 'Style','text', 'String', 'Pos', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'FontWeight', 'bold', 'Position',[0.5 .91 .5 .06 ]);
+
 %%%%%%%%%%%%%%%%%%%%%
 % CV Range
-% Text
-uicontrol('Style','text', 'String','CV Range:', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
-    'Position',[.405 .84 .04 .03 ]);
+uicontrol(panelRange, 'Style','text', 'String','CV Range', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position',[0 .8 1 .06 ]);
 
-valCVMaxPos = uicontrol('Style','edit', 'String', 20, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position',[.445 .86 .05 .03 ],...
-    'Callback',{@editCVMax});
-    function editCVMax(~, ~)
-        valMax = str2double(get(valCVMaxPos, 'String'));
-        valMin = str2double(get(valCVMinPos, 'String'));
-        if valMax < valMin+5
-            set(valCVMaxPos, 'String', num2str(valMin+5));
-        end
-        funcRefreshPlaylist;
-    end
-
-valCVMinPos = uicontrol('Style','edit', 'String', -45, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [.445 .82 .05 .03 ],...
-    'Callback', {@editCVMin});
-    function editCVMin(~, ~)
+valCVMinPos = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.71 valFieldWidth valFieldHeight ],...
+    'Callback', {@editCVMinPos});
+    function editCVMinPos(~, ~)
         valMax = str2double(get(valCVMaxPos, 'String'));
         valMin = str2double(get(valCVMinPos, 'String'));
         if valMax < valMin+5
@@ -182,29 +191,53 @@ valCVMinPos = uicontrol('Style','edit', 'String', -45, 'Units', 'normalized',...
         funcRefreshPlaylist;
     end
 
-%%%%%%%%%%%%%%%%%%%%%
-% RT Range
-% Text
-uicontrol('Style','text', 'String', 'RT Range:', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
-    'Position', [.405 .74 .04 .03 ]);
-
-valRTMaxPos = uicontrol('Style','edit', 'String', 800, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [.445 .76 .05 .03 ],...
-    'Callback',{@editRTMax});
-    function editRTMax(~, ~)
-        valMax = str2double(get(valRTMaxPos, 'String'));
-        valMin = str2double(get(valRTMinPos, 'String'));
+valCVMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position',[valRightStart 0.61 valFieldWidth valFieldHeight ],...
+    'Callback',{@editCVMaxPos});
+    function editCVMaxPos(~, ~)
+        valMax = str2double(get(valCVMaxPos, 'String'));
+        valMin = str2double(get(valCVMinPos, 'String'));
         if valMax < valMin+5
-            set(valRTMaxPos, 'String', num2str(valMin+5));
+            set(valCVMaxPos, 'String', num2str(valMin+5));
         end
         funcRefreshPlaylist;
     end
 
-valRTMinPos = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [.445 .72 .05 .03 ],...
-    'Callback',{@editRTMin});
-    function editRTMin(~, ~)
+valCVMinNeg = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.71 valFieldWidth valFieldHeight ],...
+    'Callback', {@editCVMinNeg});
+    function editCVMinNeg(~, ~)
+        valMax = str2double(get(valCVMaxNeg, 'String'));
+        valMin = str2double(get(valCVMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valCVMinNeg, 'String', num2str(valMax-5));
+        end
+        funcRefreshPlaylist;
+    end
+
+valCVMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position',[valLeftStart 0.61 valFieldWidth valFieldHeight ],...
+    'Callback',{@editCVMaxNeg});
+    function editCVMaxNeg(~, ~)
+        valMax = str2double(get(valCVMaxNeg, 'String'));
+        valMin = str2double(get(valCVMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valCVMaxNeg, 'String', num2str(valMin+5));
+        end
+        funcRefreshPlaylist;
+    end
+
+
+%%%%%%%%%%%%%%%%%%%%%
+% RT Range
+uicontrol(panelRange, 'Style','text', 'String', 'RT Range', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position', [0 .5 1 .06 ]);
+
+valRTMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.41 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMinPos});
+    function editRTMinPos(~, ~)
         valMax = str2double(get(valRTMaxPos, 'String'));
         valMin = str2double(get(valRTMinPos, 'String'));
         if valMax < valMin+5
@@ -213,17 +246,64 @@ valRTMinPos = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
         funcRefreshPlaylist;
     end
 
+valRTMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.31 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMaxPos});
+    function editRTMaxPos(~, ~)
+        valMax = str2double(get(valRTMaxPos, 'String'));
+        valMin = str2double(get(valRTMinPos, 'String'));
+        if valMax < valMin+5
+            set(valRTMaxPos, 'String', num2str(valMin+5));
+        end
+        funcRefreshPlaylist;
+    end
+
+valRTMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.41 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMinNeg});
+    function editRTMinNeg(~, ~)
+        valMax = str2double(get(valRTMaxNeg, 'String'));
+        valMin = str2double(get(valRTMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valRTMinNeg, 'String', num2str(valMax-5));
+        end
+        funcRefreshPlaylist;
+    end
+
+valRTMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.31 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMaxNeg});
+    function editRTMaxNeg(~, ~)
+        valMax = str2double(get(valRTMaxNeg, 'String'));
+        valMin = str2double(get(valRTMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valRTMaxNeg, 'String', num2str(valMin+5));
+        end
+        funcRefreshPlaylist;
+    end
+
 %%%%%%%%%%%%%%%%%%%%%
 % Z Range
-% Text
-uicontrol('Style','text', 'String','Z Range:', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
-    'Position',[.405 .64 .04 .03 ]);
+uicontrol(panelRange, 'Style','text', 'String','Z Range', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position',[0 .2 1 .06 ]);
 
-valZMaxPos = uicontrol('Style','edit', 'String', 0.5, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [.445 .66 .05 .03 ],...
-    'Callback',{@editZMax});
-    function editZMax(~, ~)
+valZMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.11 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMinPos});
+    function editZMinPos(~, ~)
+        valMax = str2double(get(valZMaxPos, 'String'));
+        valMin = str2double(get(valZMinPos, 'String'));
+        if valMax < valMin+.001
+            set(valZMinPos, 'String', num2str(valMax-.001));
+        end
+        funcRefreshPlaylist;
+    end
+
+valZMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.01 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMaxPos});
+    function editZMaxPos(~, ~)
         valMax = str2double(get(valZMaxPos, 'String'));
         valMin = str2double(get(valZMinPos, 'String'));
         if valMax < valMin+.001
@@ -232,14 +312,26 @@ valZMaxPos = uicontrol('Style','edit', 'String', 0.5, 'Units', 'normalized',...
         funcRefreshPlaylist;
     end
 
-valZMinPos = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [.445 .62 .05 .03 ],...
-    'Callback',{@editZMin});
-    function editZMin(~, ~)
-        valMax = str2double(get(valZMaxPos, 'String'));
-        valMin = str2double(get(valZMinPos, 'String'));
+valZMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.11 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMinNeg});
+    function editZMinNeg(~, ~)
+        valMax = str2double(get(valZMaxNeg, 'String'));
+        valMin = str2double(get(valZMinNeg, 'String'));
         if valMax < valMin+.001
-            set(valZMinPos, 'String', num2str(valMax-.001));
+            set(valZMinNeg, 'String', num2str(valMax-.001));
+        end
+        funcRefreshPlaylist;
+    end
+
+valZMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.01 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMaxNeg});
+    function editZMaxNeg(~, ~)
+        valMax = str2double(get(valZMaxNeg, 'String'));
+        valMin = str2double(get(valZMinNeg, 'String'));
+        if valMax < valMin+.001
+            set(valZMaxNeg, 'String', num2str(valMin+.001));
         end
         funcRefreshPlaylist;
     end
@@ -252,7 +344,7 @@ valZMinPos = uicontrol('Style','edit', 'String', 0, 'Units', 'normalized',...
 % PCA Button
 buttPCA = uicontrol('Style','pushbutton', 'Units', 'normalized',...
     'String','PCA',...
-    'Position',[.40666 .56 .04 .03], 'BackgroundColor', colorGrey,...
+    'Position',[.40666 .54 .04 .03], 'BackgroundColor', colorGrey,...
     'Callback',{@buttPCA_Callback}); %#ok<NASGU>
     function buttPCA_Callback(~, ~)
         valCVHigh = str2double(get(valCVMaxPos, 'String'));
@@ -490,19 +582,19 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Add Wo
             'HorizontalAlignment', 'left', 'Position',[.455 .84 .04 .03 ]);
         valCVWorkspaceMax = uicontrol(objWindowLoadData, 'Style','edit',...
             'String', 15, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
-            'Position',[.495 .86 .05 .03 ], 'Callback',{@editCVMax});
+            'Position',[.495 .86 .05 .03 ], 'Callback',{@editCVMaxPos});
         valCVWorkspaceMin = uicontrol(objWindowLoadData, 'Style','edit',...
             'String', -43, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
-            'Position',[.495 .82 .05 .03 ], 'Callback',{@editCVMin});
+            'Position',[.495 .82 .05 .03 ], 'Callback',{@editCVMinPos});
         uicontrol(objWindowLoadData, 'Style','text', 'String','RT Range:',...
             'Units', 'normalized', 'BackgroundColor', colorGrey,...
             'HorizontalAlignment', 'left', 'Position',[.455 .74 .04 .03 ]);
         valRTWorkspaceMax = uicontrol(objWindowLoadData, 'Style','edit',...
             'String', 505, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
-            'Position',[.495 .76 .05 .03 ], 'Callback',{@editRTMax});
+            'Position',[.495 .76 .05 .03 ], 'Callback',{@editRTMaxPos});
         valRTWorkspaceMin = uicontrol(objWindowLoadData, 'Style','edit',...
             'String', 0, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
-            'Position',[.495 .72 .05 .03 ], 'Callback',{@editRTMin});    
+            'Position',[.495 .72 .05 .03 ], 'Callback',{@editRTMinPos});    
         
         function buttWorkspaceAddVariables(~,~)
             valCVLow = str2double(get(valCVWorkspaceMin, 'string'));
