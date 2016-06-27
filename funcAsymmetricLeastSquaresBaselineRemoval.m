@@ -26,6 +26,13 @@ function [matOut, matZ] = funcAsymmetricLeastSquaresBaselineRemoval( matY, valLa
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 numIterations = 10;
 
+%matY has to be positive definite, and some of Yuriy's data comes in
+%negative, so fixing that...
+if any(matY(:) < 0)
+    matY = matY - min(matY(:))+0.001;
+end
+    
+
 if nargin < 2 || valLambda == 0
     valLambda = 10^2;
 end

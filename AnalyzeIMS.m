@@ -48,9 +48,13 @@ ptrPreviousToast = -1;
 boolAxisRangesSet = false;
 boolPreProcessingContainsBaseline = false;
 
-valRawZMin = 0;
-valPreProcZMin = 0;
-valZOffset = 0;
+valRawZMinPos = 0;
+valPreProcZMinPos = 0;
+valZOffsetPos = 0;
+
+valRawZMinNeg = 0;
+valPreProcZMinNeg = 0;
+valZOffsetNeg = 0;
 
 strBlank = '___';
 strUndetermined = 'Classification Undetermined';
@@ -99,17 +103,26 @@ objBigWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
 % Primary Axes
 objAxisMain = axes('Position',[.03,.07,.37,.88]);
 
-uicontrol('Style','text',...
-    'String','Copyright The Regents of the University of California, Davis campus, 2014-16.  All rights reserved.',...
-    'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
-    'Position',[.11 .0 .37 .03 ]);
-
+%%%%%%%%%%%%%%%%%%%%%
+% Spectra Selection Dropdown
+menuSpectraSelection = uicontrol(...
+        'Style','popupmenu',...
+        'String',{'Positive Spectra'; 'Negative Spectra'},...
+        'Value', 1,...
+        'Units', 'normalized',...
+        'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left',...
+        'Position',[0.03 0.96 .1 0.03],...
+        'Callback', {@menuSpectraSelection_Callback});
+    function menuSpectraSelection_Callback(~,~)
+        funcRefreshPlaylist()
+    end
 %%%%%%%%%%%%%%%%%%%%%
 % Current File Title
 textCurrFile = uicontrol('Style','text', 'String','[No File Selected]',...
     'Units', 'normalized', 'BackgroundColor', colorGrey,...
-    'Position',[.03 .96 .47 .03 ]);
+    'HorizontalAlignment', 'left',...
+    'Position',[.16 .96 .34 .03 ]);
 
 %%%%%%%%%%%%%%%%%%%%%
 % View Raw Data Button
@@ -120,15 +133,20 @@ buttonToggleButton = uicontrol('Style','togglebutton', 'Value', 1,...
     function buttViewRawData_Callback(~,~)
         boolGoingToRaw = get(buttonToggleButton, 'value');
         if ~boolGoingToRaw && boolPreProcessingContainsBaseline
-            set(valZMinPos, 'String', num2str(valPreProcZMin));
-            set(valZMaxPos, 'String', num2str(valZOffset+valPreProcZMin));
+            set(valZMinPos, 'String', num2str(valPreProcZMinPos));
+            set(valZMaxPos, 'String', num2str(valZOffsetPos+valPreProcZMinPos));
         elseif boolPreProcessingContainsBaseline
-            set(valZMinPos, 'String', num2str(valRawZMin));
-            set(valZMaxPos, 'String', num2str(valRawZMin+valZOffset));
+            set(valZMinPos, 'String', num2str(valRawZMinPos));
+            set(valZMaxPos, 'String', num2str(valRawZMinPos+valZOffsetPos));
         end
         funcRefreshPlaylist()
     end
 
+uicontrol('Style','text',...
+    'String','Copyright The Regents of the University of California, Davis campus, 2014-16.  All rights reserved.',...
+    'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
+    'Position',[.11 .0 .37 .03 ]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Central Button Panel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,7 +155,7 @@ buttonToggleButton = uicontrol('Style','togglebutton', 'Value', 1,...
 % Directional Buttons
 % Previous
 uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','<<',...
-    'Position',[.42 .91 .025 .05], 'BackgroundColor', colorGrey,...
+    'Position',[.425 .91 .025 .05], 'BackgroundColor', colorGrey,...
     'Callback',{@buttPreviousSample_Callback});
     function buttPreviousSample_Callback(~,~)
         funcChangeSample(-1);
@@ -145,7 +163,7 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','<<',...
 
 % Next
 uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','>>',...
-    'Position',[.455 .91 .025 .05], 'BackgroundColor', colorGrey,...
+    'Position',[.46 .91 .025 .05], 'BackgroundColor', colorGrey,...
     'Callback',{@buttNextSample_Callback});
     function buttNextSample_Callback(~,~)
         funcChangeSample(+1);
@@ -160,19 +178,28 @@ panelRange = uipanel('BackgroundColor', colorGrey,...
 % time.
 valFieldHeight = 0.08;
 valFieldWidth = 0.4;
-valLeftStart = 0.05;
-valRightStart = 0.55;
+valLeftStart = 0.55;
+valRightStart = 0.05;
 
 %%%%%%%%%%%%%%%%%%%%%
 % Pos/Neg Titles
 uicontrol(panelRange, 'Style','text', 'String', 'Neg', 'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'FontWeight', 'bold', 'Position',[0 .91 .5 .06 ]);
+    'FontWeight', 'bold', 'Position',[valLeftStart .91 valFieldWidth .06 ]);
 
 uicontrol(panelRange, 'Style','text', 'String', 'Pos', 'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'FontWeight', 'bold', 'Position',[0.5 .91 .5 .06 ]);
+    'FontWeight', 'bold', 'Position',[valRightStart .91 valFieldWidth .06 ]);
 
+% Pos Neg Ranges Lock Box
+uicontrol(panelRange, 'Style','text', 'String','Lock', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position',[.4 .93 .2 .06 ]);
+
+checkboxLockPosNegRanges = uicontrol(panelRange, 'Style','checkbox',...
+    'Visible', 'on',...
+    'Units', 'normalized', 'BackgroundColor', colorGrey,...
+    'Value', 1, 'Position',[.45 .88 .1 .05 ]);
 %%%%%%%%%%%%%%%%%%%%%
 % CV Range
 uicontrol(panelRange, 'Style','text', 'String','CV Range', 'Units', 'normalized',...
@@ -188,6 +215,11 @@ valCVMinPos = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'nor
         if valMax < valMin+5
             set(valCVMinPos, 'String', num2str(valMax-5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMinNeg, 'String', get(valCVMinPos, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -200,6 +232,11 @@ valCVMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'norm
         if valMax < valMin+5
             set(valCVMaxPos, 'String', num2str(valMin+5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMaxNeg, 'String', get(valCVMaxPos, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -212,6 +249,11 @@ valCVMinNeg = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'nor
         if valMax < valMin+5
             set(valCVMinNeg, 'String', num2str(valMax-5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMinPos, 'String', get(valCVMinNeg, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -224,6 +266,11 @@ valCVMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'norm
         if valMax < valMin+5
             set(valCVMaxNeg, 'String', num2str(valMin+5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMaxPos, 'String', get(valCVMaxNeg, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -243,6 +290,11 @@ valRTMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'norma
         if valMax < valMin+5
             set(valRTMinPos, 'String', num2str(valMax-5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMinNeg, 'String', get(valRTMinPos, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -255,6 +307,11 @@ valRTMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'nor
         if valMax < valMin+5
             set(valRTMaxPos, 'String', num2str(valMin+5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMaxNeg, 'String', get(valRTMaxPos, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -267,6 +324,11 @@ valRTMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'norma
         if valMax < valMin+5
             set(valRTMinNeg, 'String', num2str(valMax-5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMinPos, 'String', get(valRTMinNeg, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -279,6 +341,11 @@ valRTMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'nor
         if valMax < valMin+5
             set(valRTMaxNeg, 'String', num2str(valMin+5));
         end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMaxPos, 'String', get(valRTMaxNeg, 'String'));
+        end
+        
         funcRefreshPlaylist;
     end
 
@@ -359,7 +426,6 @@ buttPCA = uicontrol('Style','pushbutton', 'Units', 'normalized',...
 
 %%%%%%%%%%%%%%%%%%%%%
 % Pre-Processing List
-% Text
 uicontrol('Style','text', 'String','Applied Preprocessing:', 'Units',...
     'normalized', 'BackgroundColor', colorGrey,...
     'HorizontalAlignment', 'left',...
@@ -370,6 +436,54 @@ listPreprocessing = uicontrol('Style','listbox', 'Units', 'normalized',...
     'Position',[.41 .37 .09 .135 ]);   
         %No idea why this sums up to more than the above location but it
         %looks nice 
+        
+
+%%%%%%%%%%%%%%%%%%%%%
+% Include Negative Analysis Checkbox
+checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
+    'Visible', 'on',...
+    'Units', 'normalized', 'BackgroundColor', colorGrey,...
+    'Value', 1, 'Position',[.41 .33 .01 .02 ],...
+    'Callback', {@checkboxIncludeNegativeAnalysis_Callback});
+    function checkboxIncludeNegativeAnalysis_Callback(~,~)
+        
+        % Placing this all here, but soon will deal with when there
+        % contains files that don't have negative spectra and we have the
+        % software automatically shutdown the ability to analyze negative
+        % spectra.  In this situation, the following up until before
+        % funcRefreshPlaylist should be placed in a second function that
+        % can be called without recursively calling funcRefreshPlaylist...
+        
+        if get(checkboxIncludeNegativeAnalysis, 'Value') == 1
+            set(menuSpectraSelection, 'Visible', 'on');
+            set(valCVMinNeg, 'Visible', 'on');
+            set(valCVMaxNeg, 'Visible', 'on');
+            set(valRTMinNeg, 'Visible', 'on');
+            set(valRTMaxNeg, 'Visible', 'on');
+            set(valZMinNeg, 'Visible', 'on');
+            set(valZMaxNeg, 'Visible', 'on');
+        else
+            set(menuSpectraSelection, 'Value',...
+                find(strcmp(get(menuSpectraSelection, 'String'),...
+                'Positive Spectra')))
+
+            set(menuSpectraSelection, 'Visible', 'off');
+            set(valCVMinNeg, 'Visible', 'off');
+            set(valCVMaxNeg, 'Visible', 'off');
+            set(valRTMinNeg, 'Visible', 'off');
+            set(valRTMaxNeg, 'Visible', 'off');
+            set(valZMinNeg, 'Visible', 'off');
+            set(valZMaxNeg, 'Visible', 'off');
+        end
+    
+        funcRefreshPlaylist;
+    end
+        
+
+uicontrol('Style','text', 'String','Include Negative Spectra in Analysis',...
+    'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
+    'Position',[.425 .3 .075 .06 ]);
 
 %%%%%%%%%%%%%%%%%%%%%
 % Button to Pop Out Figure
@@ -438,6 +552,10 @@ buttDumpVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normali
         assignin('base', 'valRTMaxPos', str2double(get(valRTMaxPos, 'String')) );
         assignin('base', 'valCVMinPos', str2double(get(valCVMinPos, 'String')) );
         assignin('base', 'valCVMaxPos', str2double(get(valCVMaxPos, 'String')) );
+        assignin('base', 'valRTMinNeg', str2double(get(valRTMinNeg, 'String')) );
+        assignin('base', 'valRTMaxNeg', str2double(get(valRTMaxNeg, 'String')) );
+        assignin('base', 'valCVMinNeg', str2double(get(valCVMinNeg, 'String')) );
+        assignin('base', 'valCVMaxNeg', str2double(get(valCVMaxNeg, 'String')) );
         assignin('base', 'cellCategories', cellCategories( numBaseCol+1:end));
         assignin('base', 'cellClassifications', cellPlaylist(vecUsed, numBaseCol+1:end));
         assignin('base', 'strBlank', strBlank);
@@ -463,6 +581,8 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','About',...
         
         funcToast(strDisplay, sprintf('About %s', strSoftwareName), 'help');
     end
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Tab Layout
@@ -609,6 +729,8 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Add Wo
             for i=1:size(cellTempData,1)
                 matTemp = evalin('base', cellAddVariables{i});
                 
+                matTemp(isnan(matTemp)) = min(matTemp(:));
+                
                 cellTempData{i, 1} = linspace(valCVLow, valCVHigh, size(matTemp,2));
                 cellTempData{i, 2} = linspace(valRTLow, valRTHigh, size(matTemp,1));
                 cellTempData{i,3} = matTemp;
@@ -719,8 +841,8 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load M
         %The following dancing allows for the user to view raw data without
         %messing up their view port, but still getting it close to what
         %should be expected viewing.
-        valZOffset = str2double(fileData.strZMax)-str2double(fileData.strZMin);
-        set(valZMaxPos, 'String', sprintf('%.4f', valZOffset...
+        valZOffsetPos = str2double(fileData.strZMax)-str2double(fileData.strZMin);
+        set(valZMaxPos, 'String', sprintf('%.4f', valZOffsetPos...
             +str2double(get(valZMinPos, 'String'))));
         
         %Setup the PreProcessing
@@ -1840,7 +1962,6 @@ function funcApplyPreProcessing
                 end                
             end
             cellTemp{i} = tempMat;
-                   
         end
     end
     cellData(vecBoolDirty,3) = cellTemp(vecBoolDirty);  
@@ -1874,10 +1995,10 @@ function funcApplyPreProcessing
     
     if boolAxisRangesSet && boolPreProcessingContainsBaseline
         set(valZMinPos, 'String', '0');
-        set(valZMaxPos, 'String', num2str(valZOffset));
+        set(valZMaxPos, 'String', num2str(valZOffsetPos));
     elseif boolAxisRangesSet
-        set(valZMinPos, 'String', num2str(valRawZMin));
-        set(valZMaxPos, 'String', num2str(valRawZMin+valZOffset));
+        set(valZMinPos, 'String', num2str(valRawZMinPos));
+        set(valZMaxPos, 'String', num2str(valRawZMinPos+valZOffsetPos));
     end
     
     if size(cellPreProcessing,1) > 0
@@ -1898,11 +2019,26 @@ function funcSetMaxes()
         set(valRTMinPos, 'String', num2str(min(cellfun(@min, cellData(:,2)))));
         set(valZMaxPos, 'String', num2str(max(cellfun(@(x) max(max(x)), cellData(:,3)))));
         set(valZMinPos, 'String', num2str(min(cellfun(@(x) min(min(x)), cellData(:,3)))));
-        boolAxisRangesSet = true;
         
-        valRawZMax = max(cellfun(@(x) max(max(x)), cellRawData(:,3)));
-        valRawZMin = min(cellfun(@(x) min(min(x)), cellRawData(:,3)));
-        valZOffset = valRawZMax - valRawZMin;
+        valRawZMaxPos = max(cellfun(@(x) max(max(x)), cellRawData(:,3)));
+        valRawZMinPos = min(cellfun(@(x) min(min(x)), cellRawData(:,3)));
+        valZOffsetPos = valRawZMaxPos - valRawZMinPos;
+        
+        cellNegData = cellData(cellfun(@(x) ~isempty(x), cellData(:,4)), 4);
+        if ~isempty(cellNegData)
+            set(valCVMaxNeg, 'String', get(valCVMaxPos, 'String'));
+            set(valCVMinNeg, 'String', get(valCVMinPos, 'String'));
+            set(valRTMaxNeg, 'String', get(valRTMaxPos, 'String'));
+            set(valRTMinNeg, 'String', get(valRTMinPos, 'String'));
+            set(valZMaxNeg, 'String', num2str(max(cellfun(@(x) max(max(x)), cellData(:,4)))));
+            set(valZMinNeg, 'String', num2str(min(cellfun(@(x) min(min(x)), cellData(:,4)))));
+
+            valRawZMaxNeg = max(cellfun(@(x) max(max(x)), cellRawData(:,4)));
+            valRawZMinNeg = min(cellfun(@(x) min(min(x)), cellRawData(:,4)));
+            valZOffsetNeg = valRawZMaxNeg - valRawZMinNeg;
+        end
+        
+        boolAxisRangesSet = true;
     end
 end
 
@@ -1911,6 +2047,7 @@ function funcRefreshPlaylist()
     
     %Check the sort Vector to see how the data should be organized
     %Consider Automatically saving to "currPlaylist" at this point.
+   
 
     %Assume to Sort by Date.
     if ~isempty(cellPlaylist)    
@@ -1969,12 +2106,27 @@ function funcRefreshPlaylist()
             currData = cellData(currFigure,:);
         end
         
-        valMinCV = str2double(get(valCVMinPos, 'String'));
-        valMaxCV = str2double(get(valCVMaxPos, 'String'));
-        valMinRT = str2double(get(valRTMinPos, 'String'));
-        valMaxRT = str2double(get(valRTMaxPos, 'String'));
-        valMinZ = str2double(get(valZMinPos, 'String'));
-        valMaxZ = str2double(get(valZMaxPos, 'String'));
+        
+        strCurrSpectra = get(menuSpectraSelection, 'String');
+        strCurrSpectra = strCurrSpectra{get(menuSpectraSelection, 'Value')};
+        
+        if strcmp(strCurrSpectra, 'Positive Spectra')
+            valMinCV = str2double(get(valCVMinPos, 'String'));
+            valMaxCV = str2double(get(valCVMaxPos, 'String'));
+            valMinRT = str2double(get(valRTMinPos, 'String'));
+            valMaxRT = str2double(get(valRTMaxPos, 'String'));
+            valMinZ = str2double(get(valZMinPos, 'String'));
+            valMaxZ = str2double(get(valZMaxPos, 'String'));
+        elseif strcmp(strCurrSpectra, 'Negative Spectra')
+            valMinCV = str2double(get(valCVMinNeg, 'String'));
+            valMaxCV = str2double(get(valCVMaxNeg, 'String'));
+            valMinRT = str2double(get(valRTMinNeg, 'String'));
+            valMaxRT = str2double(get(valRTMaxNeg, 'String'));
+            valMinZ = str2double(get(valZMinNeg, 'String'));
+            valMaxZ = str2double(get(valZMaxNeg, 'String'));
+            
+            currData{3} = currData{4};
+        end
 
         indxMinCV = find(currData{1}>valMinCV, 1, 'first');
         indxMaxCV = find(currData{1}<valMaxCV, 1, 'last');
@@ -1985,6 +2137,7 @@ function funcRefreshPlaylist()
         currData{1} = currData{1}(indxMinCV:indxMaxCV);
         currData{2} = currData{2}(indxMinRT:indxMaxRT);
         currData{3} = currData{3}(indxMinRT:indxMaxRT, indxMinCV:indxMaxCV);
+
         
         %Set Z Limits
         tempMat = currData{3};
@@ -1994,11 +2147,11 @@ function funcRefreshPlaylist()
         
         boolRawData = get(buttonToggleButton, 'value');
         if boolRawData
-            valRawZMin = valMinZ;
+            valRawZMinPos = valMinZ;
         else
-            valPreProcZMin = valMinZ;
+            valPreProcZMinPos = valMinZ;
         end
-        valZOffset = valMaxZ - valMinZ;             
+        valZOffsetPos = valMaxZ - valMinZ;             
         
         if boolEmptyPlot
             surf(currData{1}, currData{2}, currData{3});
