@@ -135,9 +135,15 @@ buttonToggleButton = uicontrol('Style','togglebutton', 'Value', 1,...
         if ~boolGoingToRaw && boolPreProcessingContainsBaseline
             set(valZMinPos, 'String', num2str(valPreProcZMinPos));
             set(valZMaxPos, 'String', num2str(valZOffsetPos+valPreProcZMinPos));
+            
+            set(valZMinNeg, 'String', num2str(valPreProcZMinNeg));
+            set(valZMaxNeg, 'String', num2str(valZOffsetNeg+valPreProcZMinNeg));
         elseif boolPreProcessingContainsBaseline
             set(valZMinPos, 'String', num2str(valRawZMinPos));
             set(valZMaxPos, 'String', num2str(valRawZMinPos+valZOffsetPos));
+            
+            set(valZMinNeg, 'String', num2str(valRawZMinNeg));
+            set(valZMaxNeg, 'String', num2str(valRawZMinNeg+valZOffsetNeg));
         end
         funcRefreshPlaylist()
     end
@@ -1964,7 +1970,33 @@ function funcApplyPreProcessing
             cellTemp{i} = tempMat;
         end
     end
-    cellData(vecBoolDirty,3) = cellTemp(vecBoolDirty);  
+    cellData(vecBoolDirty,3) = cellTemp(vecBoolDirty);
+    
+    %%%%
+    % Negative
+    vecBoolNegAndDirty = vecBoolDirty...
+        & cellfun(@(x) ~isempty(x), cellData(:,4));
+    cellTemp = cellData(:,4);
+    parfor i=1:length(vecBoolNegAndDirty)       
+        if vecBoolNegAndDirty(i)
+            tempMat = cellTemp{i};
+            for j=1:size(tempCellPreProcessing,1)
+                if strcmp(tempCellPreProcessing{j,1}, 'Smoothing - Savitzky-Golay')
+                    tempMat = funcSavitzkyGolay( tempMat,...
+                        tempCellPreProcessing{j,3}(2),...
+                        tempCellPreProcessing{j,3}(1) )
+                end
+                if strcmp(tempCellPreProcessing{j,1}, 'Baseline - ALS')
+                    tempMat = funcAsymmetricLeastSquaresBaselineRemoval( tempMat,...
+                        tempCellPreProcessing{j,3}(1),...
+                        tempCellPreProcessing{j,3}(2) )
+                end                
+            end
+            cellTemp{i} = tempMat;
+        end
+    end
+    cellData(vecBoolNegAndDirty,4) = cellTemp(vecBoolNegAndDirty);
+    
     
     %Weighted Normalization Application
     if get(boolWeightedNormalization, 'Value')
@@ -1973,6 +2005,15 @@ function funcApplyPreProcessing
         for i = 1:size(cellData, 1)
             cellData{i,3} = cellData{i,3} * vecSumIntensities(i);
         end
+        
+        vecNegExists = find(cellfun(@(x) ~isempty(x), cellData(:,4)));
+        vecSumIntensities = cellfun(@(x) sum(x(:)), cellData(vecNegExists,4));
+        vecSumIntensities = mean(vecSumIntensities) ./ vecSumIntensities;
+        for i = 1:size(vecNegExists, 1)
+            cellData{vecNegExists(i),4}...
+                = cellData{vecNegExists(i),4} * vecSumIntensities(i);
+        end
+        
     end
     
     vecBoolDirty = false(size(vecBoolDirty));
@@ -1996,9 +2037,15 @@ function funcApplyPreProcessing
     if boolAxisRangesSet && boolPreProcessingContainsBaseline
         set(valZMinPos, 'String', '0');
         set(valZMaxPos, 'String', num2str(valZOffsetPos));
+        
+        set(valZMinNeg, 'String', '0');
+        set(valZMaxNeg, 'String', num2str(valZOffsetNeg));
     elseif boolAxisRangesSet
         set(valZMinPos, 'String', num2str(valRawZMinPos));
         set(valZMaxPos, 'String', num2str(valRawZMinPos+valZOffsetPos));
+        
+        set(valZMinNeg, 'String', num2str(valRawZMinNeg));
+        set(valZMaxNeg, 'String', num2str(valRawZMinNeg+valZOffsetNeg));
     end
     
     if size(cellPreProcessing,1) > 0
@@ -2147,11 +2194,16 @@ function funcRefreshPlaylist()
         
         boolRawData = get(buttonToggleButton, 'value');
         if boolRawData
-            valRawZMinPos = valMinZ;
+            valRawZMinPos = str2double(get(valZMinPos, 'String'));
+            valRawZMinNeg = str2double(get(valZMinNeg, 'String'));
         else
-            valPreProcZMinPos = valMinZ;
+            valPreProcZMinPos = str2double(get(valZMinPos, 'String'));
+            valPreProcZMinNeg = str2double(get(valZMinNeg, 'String'));
         end
-        valZOffsetPos = valMaxZ - valMinZ;             
+        valZOffsetPos = str2double(get(valZMaxPos, 'String'))...
+            - str2double(get(valZMinPos, 'String'));
+        valZOffsetNeg = str2double(get(valZMaxNeg, 'String'))...
+            - str2double(get(valZMinNeg, 'String'));
         
         if boolEmptyPlot
             surf(currData{1}, currData{2}, currData{3});
