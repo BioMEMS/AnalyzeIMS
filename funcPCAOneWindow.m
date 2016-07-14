@@ -54,8 +54,7 @@ figure
 for i=1:numPCs
     if ~boolIncludeNeg
         subplot(1,4, i+2)
-        matLoadings = reshape(cubeLoadings(i,:),numRTPos,...
-            numCVPos);
+        matLoadings = reshape(cubeLoadings(i,:), numRTPos, numCVPos);
         surf(arrCVPos{1}, arrRTPos{1}, matLoadings);
         shading interp
 

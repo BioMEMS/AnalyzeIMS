@@ -1,6 +1,7 @@
 function [cellCategoryInfo, cellModelInformation]...
-    = funcHandleNPLS(cellData, valRTMin, valRTMax, valCVMin, valCVMax,...
-    cellCategories, cellClassifications, strBlank, numLV, valModelType)
+    = funcHandleNPLS(cellData, valRTMinPos, valRTMaxPos, valCVMinPos,...
+    valCVMaxPos, cellCategories, cellClassifications, strBlank, numLV,...
+    valModelType, valRTMinNeg, valRTMaxNeg, valCVMinNeg, valCVMaxNeg)
 
 % Initially Written: 02FEB2015
 % Initial Author:  Daniel J. Peirano
@@ -55,10 +56,27 @@ numSamples = size(cellData, 1);
 cellCategoryInfo = cell(4, numCategories);
 cellModelInformation = cell(8, numCategories);
 
+if nargin == 10
+    boolIncludeNeg = false;
+else
+    boolIncludeNeg = true;
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%
 % Convert data to cube of same size matrices for analysis
-[cubeX, ~, ~]...
-    = funcCellToCube(cellData, valCVMin, valCVMax, valRTMin, valRTMax);
+[cubeXPos, ~, ~] = funcCellToCube(cellData, valCVMinPos, valCVMaxPos,...
+    valRTMinPos, valRTMaxPos);
+cubeX = reshape(cubeXPos, size(cubeXPos,1), numel(cubeXPos)/size(cubeXPos,1));
+
+if boolIncludeNeg
+    [cubeXNeg, ~, ~] = funcCellToCube(cellData(:,[1,2,4]), valCVMinNeg,...
+        valCVMaxNeg, valRTMinNeg, valRTMaxNeg);
+    cubeXNeg = reshape(cubeXNeg, size(cubeXNeg,1),...
+        numel(cubeXNeg)/size(cubeXNeg,1));
+    
+    cubeX = [cubeX, cubeXNeg];
+end
 
 for i=1:numCategories
     cellCategoryInfo{1,i} = cellCategories{i};
@@ -120,12 +138,12 @@ for i=1:numCategories
         vecIndxTraining = vecIndxClassifiedData(~vecBoolValidation);
         
         [ matQ, cubeW, cubeP, vecB, meanX, stdX, meanY, stdY ]...
-            = funcUnfoldPLS_NumComp( cubeX(vecIndxTraining,:,:),...
+            = funcUnfoldPLS_NumComp( cubeX(vecIndxTraining,:),...
             matY(~vecBoolValidation, :), numLV, true );
         
         if any(vecIndxValidation)
             matPredictions(vecIndxValidation,:)...
-                = funcGetPLSPredictions( cubeX(vecIndxValidation,:,:),...
+                = funcGetPLSPredictions( cubeX(vecIndxValidation,:),...
                 matQ, cubeW, cubeP, vecB, meanX, stdX, meanY, stdY );
         else
             matPredictions...

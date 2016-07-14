@@ -1,6 +1,6 @@
-function funcPLSOneWindow(cellData, valCVLow, valCVHigh, valRTLow,...
-    valRTHigh, cellClassifications, strModel, boolWeightedNormalization,...
-    cellLabels)
+function funcPLSOneWindow(cellData, valCVLowPos, valCVHighPos, valRTLowPos,...
+    valRTHighPos, cellClassifications, strModel, boolWeightedNormalization,...
+    cellLabels, valCVLowNeg, valCVHighNeg, valRTLowNeg, valRTHighNeg)
 
 % Author: Peirano, Daniel
 % Initially Written: 08Dec2015
@@ -27,12 +27,30 @@ function funcPLSOneWindow(cellData, valCVLow, valCVHigh, valRTLow,...
 numComp = 2;
 numSamps = size(cellData,1);
 
-if nargin == 8
-    cellLabels = num2str((1:numSamps)', '%d');
+if nargin == 9
+    boolIncludeNeg = false;
+else
+    boolIncludeNeg = true;
 end
 
-[cubeX, arrCV, arrRT]...
-    = funcCellToCube(cellData, valCVLow, valCVHigh, valRTLow, valRTHigh);
+
+[cubeXPos, arrCVPos, arrRTPos] = funcCellToCube(cellData, valCVLowPos,...
+    valCVHighPos, valRTLowPos, valRTHighPos);
+numCVPos = length(arrCVPos{1});
+numRTPos = length(arrRTPos{1});
+
+cubeX = reshape(cubeXPos, size(cubeXPos,1),...
+    numel(cubeXPos)/size(cubeXPos,1));
+if boolIncludeNeg
+    [cubeXNeg, arrCVNeg, arrRTNeg] = funcCellToCube(cellData(:,[1,2,4]),...
+        valCVLowNeg, valCVHighNeg, valRTLowNeg, valRTHighNeg);
+    cubeXNeg = reshape(cubeXNeg, size(cubeXNeg,1),...
+        numel(cubeXNeg)/size(cubeXNeg,1));
+    numCVNeg = length(arrCVNeg{1});
+    numRTNeg = length(arrRTNeg{1});
+    
+    cubeX = [cubeX, cubeXNeg];
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Code
@@ -41,11 +59,11 @@ end
 if boolWeightedNormalization
     %%%%
     % Normalize the Mean
-    vecSumCube = sum(sum(cubeX,3), 2);
+    vecSumCube = sum(cubeX, 2);
     valMeanCube = mean(vecSumCube);
     vecInvertSum = valMeanCube ./ vecSumCube;
     for i=1:numSamps
-        cubeX(i,:,:) = cubeX(i,:,:) * vecInvertSum(i);
+        cubeX(i,:) = cubeX(i,:) * vecInvertSum(i);
     end
 end
 
@@ -68,18 +86,56 @@ cubeLoadings = cubeW;
 figure
 
 for i=1:numComp
-    subplot(1,4, i+2)
-    matLoadings = reshape(cubeLoadings(i,:,:),size(cubeLoadings,2),...
-        size(cubeLoadings,3));
-    surf(arrCV{1}, arrRT{1}, matLoadings);
-    shading interp
-    
-    strTitle = sprintf('LV %d, (%.2f%%)', i, vecPercents(i,2)*100);
-    title(strTitle);
+    if ~boolIncludeNeg
+        subplot(1,4, i+2)
+        matLoadings = reshape(cubeLoadings(i,:), numRTPos, numCVPos);
+        surf(arrCVPos{1}, arrRTPos{1}, matLoadings);
+        shading interp
 
-    view(0,90);
-    xlim([floor(min(arrCV{1})) ceil(max(arrCV{1}))]);
-    ylim([floor(min(arrRT{1})) ceil(max(arrRT{1}))]);   
+        strTitle = sprintf('Loading LV %d, (%.2f%%)', i,...
+            vecPercents(i,2)*100);
+        title(strTitle);
+
+        view(0,90);
+        xlim([floor(min(arrCVPos{1})) ceil(max(arrCVPos{1}))]);
+        ylim([floor(min(arrRTPos{1})) ceil(max(arrRTPos{1}))]);
+    else
+        %%%%%%%%%%
+        % Positive
+        subplot(2,4, -1+4*i)
+        matLoadings = reshape(cubeLoadings(i,1:numRTPos*numCVPos)...
+            ,numRTPos, numCVPos);
+        surf(arrCVPos{1}, arrRTPos{1}, matLoadings);
+        shading interp
+        
+        strTitle = sprintf('Loading LV %d, (%.2f%%)\nPositive Spectra',...
+            i, vecPercents(i,2)*100);
+        title(strTitle);
+
+        view(0,90);
+        xlim([floor(min(arrCVPos{1})) ceil(max(arrCVPos{1}))]);
+        ylim([floor(min(arrRTPos{1})) ceil(max(arrRTPos{1}))]);
+        
+        if i== 2
+            xlabel('Compensation Voltage (V)');
+            ylabel('Retention Time (s)');
+        end
+        
+        %%%%%%%%%
+        % Negative
+        subplot(2,4, 4*i)
+        matLoadings = reshape(cubeLoadings(i,numRTPos*numCVPos+1:end)...
+            ,numRTNeg, numCVNeg);
+        surf(arrCVNeg{1}, arrRTNeg{1}, matLoadings);
+        shading interp
+        
+        title('Negative Spectra');
+        
+        
+        view(0,90);
+        xlim([floor(min(arrCVNeg{1})) ceil(max(arrCVNeg{1}))]);
+        ylim([floor(min(arrRTNeg{1})) ceil(max(arrRTNeg{1}))]);
+    end
 end
 
 valComp1 = 1;
