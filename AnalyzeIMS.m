@@ -420,14 +420,29 @@ buttPCA = uicontrol('Style','pushbutton', 'Units', 'normalized',...
     'Position',[.40666 .54 .04 .03], 'BackgroundColor', colorGrey,...
     'Callback',{@buttPCA_Callback}); %#ok<NASGU>
     function buttPCA_Callback(~, ~)
-        valCVHigh = str2double(get(valCVMaxPos, 'String'));
-        valCVLow = str2double(get(valCVMinPos, 'String'));
-        valRTHigh = str2double(get(valRTMaxPos, 'String'));
-        valRTLow = str2double(get(valRTMinPos, 'String'));
+        valCVHighPos = str2double(get(valCVMaxPos, 'String'));
+        valCVLowPos = str2double(get(valCVMinPos, 'String'));
+        valRTHighPos = str2double(get(valRTMaxPos, 'String'));
+        valRTLowPos = str2double(get(valRTMinPos, 'String'));
         vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
         cellLabels = num2str(find(vecUsed), '%d');
-        funcPCAOneWindow(cellData(vecUsed,:),...
-            valCVLow, valCVHigh, valRTLow, valRTHigh, cellLabels)
+        
+        if get(checkboxIncludeNegativeAnalysis, 'Value') == 0
+            funcPCAOneWindow(cellData(vecUsed,:),...
+                valCVLowPos, valCVHighPos, valRTLowPos, valRTHighPos,...
+                cellLabels)
+        else
+            valCVHighNeg = str2double(get(valCVMaxNeg, 'String'));
+            valCVLowNeg = str2double(get(valCVMinNeg, 'String'));
+            valRTHighNeg = str2double(get(valRTMaxNeg, 'String'));
+            valRTLowNeg = str2double(get(valRTMinNeg, 'String'));
+            funcPCAOneWindow(cellData(vecUsed,:),...
+                valCVLowPos, valCVHighPos, valRTLowPos, valRTHighPos,...
+                cellLabels, valCVLowNeg, valCVHighNeg, valRTLowNeg,...
+                valRTHighNeg)
+        end
+        
+        
     end
 
 %%%%%%%%%%%%%%%%%%%%%
