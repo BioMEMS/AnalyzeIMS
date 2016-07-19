@@ -476,6 +476,12 @@ checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
         % can be called without recursively calling funcRefreshPlaylist...
         
         if get(checkboxIncludeNegativeAnalysis, 'Value') == 1
+            if any(cellfun(@(x) isempty(x), cellData(:,4)))
+                funcToast('Not ALL samples have negative spectra for analysis.',...
+                    'Can''t Analyze Negative Spectra!', 'error');
+                set(checkboxIncludeNegativeAnalysis, 'Value', 0)
+                return
+            end
             set(menuSpectraSelection, 'Visible', 'on');
             set(valCVMinNeg, 'Visible', 'on');
             set(valCVMaxNeg, 'Visible', 'on');
@@ -484,20 +490,23 @@ checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
             set(valZMinNeg, 'Visible', 'on');
             set(valZMaxNeg, 'Visible', 'on');
         else
-            set(menuSpectraSelection, 'Value',...
-                find(strcmp(get(menuSpectraSelection, 'String'),...
-                'Positive Spectra')))
-
-            set(menuSpectraSelection, 'Visible', 'off');
-            set(valCVMinNeg, 'Visible', 'off');
-            set(valCVMaxNeg, 'Visible', 'off');
-            set(valRTMinNeg, 'Visible', 'off');
-            set(valRTMaxNeg, 'Visible', 'off');
-            set(valZMinNeg, 'Visible', 'off');
-            set(valZMaxNeg, 'Visible', 'off');
+            funcTurnOffNegativeSpectraAnalysis;
         end
     
         funcRefreshPlaylist;
+    end
+    function funcTurnOffNegativeSpectraAnalysis()
+        set(menuSpectraSelection, 'Value',...
+            find(strcmp(get(menuSpectraSelection, 'String'),...
+            'Positive Spectra')))
+
+        set(menuSpectraSelection, 'Visible', 'off');
+        set(valCVMinNeg, 'Visible', 'off');
+        set(valCVMaxNeg, 'Visible', 'off');
+        set(valRTMinNeg, 'Visible', 'off');
+        set(valRTMaxNeg, 'Visible', 'off');
+        set(valZMinNeg, 'Visible', 'off');
+        set(valZMaxNeg, 'Visible', 'off');
     end
         
 
@@ -745,7 +754,11 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Add Wo
             
             vecBoolFinalWorkspaceVariables(vecBoolInitialWorkspaceVariables) = false;
             cellAddVariables = cellCurrWorkspaceNames(vecBoolFinalWorkspaceVariables);
-            cellTempData = cell(size(cellAddVariables,1), 3);
+            if isempty(cellAddVariables)
+                return
+            end
+            
+            cellTempData = cell(size(cellAddVariables,1), 4);
             cellAddFiles = cell(size(cellAddVariables,1), 3);
             for i=1:size(cellTempData,1)
                 matTemp = evalin('base', cellAddVariables{i});
@@ -769,6 +782,13 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Add Wo
             cellPlaylist = [cellPlaylist; cellAddFiles];
 
             close(objWindowLoadData);
+            
+%             if size(cellRawData
+%             cellRawData = [cellRawData
+            
+            set(checkboxIncludeNegativeAnalysis, 'Value', 0);
+            funcTurnOffNegativeSpectraAnalysis;
+            
             funcApplyPreProcessing;
             
         end
@@ -825,7 +845,7 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Add Fo
 % Button to Load Model
 uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load Model',...
     'Position',[.56 .96 .16 .03], 'BackgroundColor', colorGrey,...
-    'Callback',{@buttLoadModel_Callback});
+    'Callback',{@buttLoadModel_Callback}, 'visible', 'off');
     function buttLoadModel_Callback(~,~)
         if isempty(cellPlaylist)
             funcToast('Please Add Files to be analyzed before loading Model',...
@@ -854,17 +874,30 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load M
         end
         
         %Setup the Viewer
-        set(valCVMaxPos, 'String', fileData.strCVMax);
-        set(valCVMinPos, 'String', fileData.strCVMin);
-        set(valRTMaxPos, 'String', fileData.strRTMax);
-        set(valRTMinPos, 'String', fileData.strRTMin);
+        set(valCVMaxPos, 'String', fileData.strCVMaxPos);
+        set(valCVMinPos, 'String', fileData.strCVMinPos);
+        set(valRTMaxPos, 'String', fileData.strRTMaxPos);
+        set(valRTMinPos, 'String', fileData.strRTMinPos);
+        
+        set(checkboxIncludeNegativeAnalysis, 'Value',...
+            fileData.valCheckboxIncludeNegativeAnalysis);
+        
+        set(valCVMaxNeg, 'String', fileData.strCVMaxNeg);
+        set(valCVMinNeg, 'String', fileData.strCVMinNeg);
+        set(valRTMaxNeg, 'String', fileData.strRTMaxNeg);
+        set(valRTMinNeg, 'String', fileData.strRTMinNeg);
         
         %The following dancing allows for the user to view raw data without
         %messing up their view port, but still getting it close to what
         %should be expected viewing.
-        valZOffsetPos = str2double(fileData.strZMax)-str2double(fileData.strZMin);
+        valZOffsetPos = str2double(fileData.strZMaxPos)-str2double(fileData.strZMinPos);
         set(valZMaxPos, 'String', sprintf('%.4f', valZOffsetPos...
             +str2double(get(valZMinPos, 'String'))));
+        valZOffsetNeg = str2double(fileData.strZMaxNeg)-str2double(fileData.strZMinNeg);
+        set(valZMaxNeg, 'String', sprintf('%.4f', valZOffsetNeg...
+            +str2double(get(valZMinNeg, 'String'))));
+        
+        
         
         %Setup the PreProcessing
         cellTempPreProcessing = fileData.cellPreProcessing;
@@ -894,7 +927,7 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load M
         
         vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
         
-        cubeX = funcCellToCube(cellData(vecUsed,:),...
+        cubeXPos = funcCellToCube(cellData(vecUsed,:),...
             str2double(get(valCVMinPos, 'String')),...
             str2double(get(valCVMaxPos, 'String')),...
             str2double(get(valRTMinPos, 'String')),...
@@ -902,6 +935,18 @@ uicontrol(tabData, 'Style','pushbutton', 'Units', 'normalized', 'String','Load M
             size(cellModelInformation{2,1}, 3),...
             size(cellModelInformation{2,1}, 2) );
         
+        cubeX = reshape(cubeXPos, size(cubeXPos,1),...
+            numel(cubeXPos)/size(cubeXPos,1));
+        
+        if get(checkboxIncludeNegativeAnalysis, 'Value')
+            [cubeXNeg, ~, ~] = funcCellToCube(cellData(:,[1,2,4]),...
+                valCVMinNeg, valCVMaxNeg, valRTMinNeg, valRTMaxNeg);
+            cubeXNeg = reshape(cubeXNeg, size(cubeXNeg,1),...
+                numel(cubeXNeg)/size(cubeXNeg,1));
+
+            cubeX = [cubeX, cubeXNeg];
+        end
+                
         for i=1:size(cellModelInformation,2)
             cellCategoryInfo{3,i} = funcGetPLSPredictions( cubeX,...
                 cellModelInformation{1,i},...
@@ -1441,7 +1486,7 @@ panelSetNumberOfModels = uipanel(panelModelTrainingApproach, 'Title', 'k-fold Cr
 % Complete Model Building
 panelCompleteModel = uipanel(panelModelTrainingApproach, 'Title', 'Build a Complete Model',...
     'BackgroundColor', colorGrey,...
-    'Position', [0.01 0.2 0.98 0.2]);
+    'Position', [0.01 0.2 0.98 0.2], 'visible', 'off');
     buttBoolCompleteModel = uicontrol(panelCompleteModel, 'Style','radiobutton',...
         'Units', 'normalized',...
         'Position',[.01 0.5 .05 0.5],...
@@ -1536,16 +1581,31 @@ uicontrol(tabModel, 'Style','pushbutton',...
                 return
             end
 
-            strCVMax = get(valCVMaxPos, 'String'); %#ok<NASGU>
-            strCVMin = get(valCVMinPos, 'String'); %#ok<NASGU>
-            strRTMax = get(valRTMaxPos, 'String'); %#ok<NASGU>
-            strRTMin = get(valRTMinPos, 'String'); %#ok<NASGU>
-            strZMax = get(valZMaxPos, 'String'); %#ok<NASGU>
-            strZMin = get(valZMinPos, 'String'); %#ok<NASGU>
+            strCVMaxPos = get(valCVMaxPos, 'String'); %#ok<NASGU>
+            strCVMinPos = get(valCVMinPos, 'String'); %#ok<NASGU>
+            strRTMaxPos = get(valRTMaxPos, 'String'); %#ok<NASGU>
+            strRTMinPos = get(valRTMinPos, 'String'); %#ok<NASGU>
+            strZMaxPos = get(valZMaxPos, 'String'); %#ok<NASGU>
+            strZMinPos = get(valZMinPos, 'String'); %#ok<NASGU>
+            
+            
+            strCVMaxNeg = get(valCVMaxNeg, 'String'); %#ok<NASGU>
+            strCVMinNeg = get(valCVMinNeg, 'String'); %#ok<NASGU>
+            strRTMaxNeg = get(valRTMaxNeg, 'String'); %#ok<NASGU>
+            strRTMinNeg = get(valRTMinNeg, 'String'); %#ok<NASGU>
+            strZMaxNeg = get(valZMaxNeg, 'String'); %#ok<NASGU>
+            strZMinNeg = get(valZMinNeg, 'String'); %#ok<NASGU>
 
-            save(strFilename{1}, 'strCVMax', 'strCVMin', 'strRTMax', 'strRTMin',...
-                'strZMax', 'strZMin', 'cellPreProcessing', 'cellCategoryInfo',...
-                'cellModelInformation', 'strSoftwareName');
+            valCheckboxIncludeNegativeAnalysis...
+                = get(checkboxIncludeNegativeAnalysis, 'Value'); %#ok<NASGU>
+            
+            save(strFilename{1}, 'strCVMaxPos', 'strCVMinPos',...
+                'strRTMaxPos', 'strRTMinPos', 'strZMaxPos',...
+                'strZMinPos', 'cellPreProcessing', 'cellCategoryInfo',...
+                'cellModelInformation', 'strSoftwareName',...
+                'valCheckboxIncludeNegativeAnalysis', 'strCVMaxNeg',...
+                'strCVMinNeg', 'strRTMaxNeg', 'strRTMinNeg',...
+                'strZMaxNeg', 'strZMinNeg');
         end
             
         set(menuCategory, 'String', cellCategoryInfo(1,:)')
@@ -1877,6 +1937,10 @@ set(objBigWindow,'Visible','on');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function funcToast(strDisplay, strTitle, strIcon)
+    %   msgbox(Message,Title,Icon) specifies which Icon to display in
+    %   the message box.  Icon is 'none', 'error', 'help', 'warn', or
+    %   'custom'. The default is 'none'.
+
     if ishandle(ptrPreviousToast)
         close(ptrPreviousToast)
     end
@@ -2020,8 +2084,13 @@ function funcApplyPreProcessing
     end
     cellData(vecBoolDirty,3) = cellTemp(vecBoolDirty);
     
+    
     %%%%
     % Negative
+    if size(cellData,2) == 3
+        cellData = [cellData, cell(size(cellData,1),1)];
+    end
+        
     vecBoolNegAndDirty = vecBoolDirty...
         & cellfun(@(x) ~isempty(x), cellData(:,4));
     cellTemp = cellData(:,4);
