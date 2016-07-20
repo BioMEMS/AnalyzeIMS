@@ -76,25 +76,9 @@ for i=1:numPOS
         vecRF = 0:( vecRFValues(3)-1 );
         vecRF = vecRFValues(1) + vecRFValues(2)*vecRF(:);
         
-        if vecRFValues(3) > length(arrTimeStamp{i})
-            warning('funcScanData.m: Number of RF measurements not equal to the number of steps from Hdr for file %s.',...
+        if vecRFValues(3) ~= length(arrTimeStamp{i})
+            error('funcScanData.m: Number of RF measurements not equal to the number of steps from Hdr for file %s.',...
                 listFiles{i});
-            
-            vecRF = vecRF(1:length(arrTimeStamp{i}));
-            arrTimeStamp{i} = vecRF;
-        elseif vecRFValues(3) < length(arrTimeStamp{i})
-            % This came up when multiple scans were read at once.  Not
-            % doing slicing for this, so just cutting it off.  (Other
-            % problem with slicing was that the intensity of the initial
-            % sample was lowered because of the follow up reading.)
-            warning('funcScanData.m: Number of RF measurements not equal to the number of steps from Hdr for file %s.',...
-                listFiles{i});
-            
-            arrTimeStamp{i} = vecRF;
-            matPos = arrScanPos{i};
-            matNeg = arrScanNeg{i};
-            arrScanPos{i} = matPos(1:vecRFValues(3), :);
-            arrScanNeg{i} = matNeg(1:vecRFValues(3), :);
         else
             arrTimeStamp{i} = vecRF;
         end
