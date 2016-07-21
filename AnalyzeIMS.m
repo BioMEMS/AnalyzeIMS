@@ -2247,12 +2247,17 @@ function funcStoreOption(strItem, objValue)
         cellOptions = [cellOptions; cell(1,2)];
         cellOptions{end,1} = strItem;
         cellOptions{end,2} = objValue;
-    elseif ~all(cellOptions{vecBoolOptions,2} == objValue)
+    else
+%         disp(length(size(cellOptions{vecBoolOptions,2})))
+%         disp(length(size(objValue))
+        if (length(size(cellOptions{vecBoolOptions,2})) == length(size(objValue)))...
+            && (all(size(cellOptions{vecBoolOptions,2}) == size(objValue)))...
+            && all(cellOptions{vecBoolOptions,2} == objValue)
+            %Nothing Changed
+            return
+        end
         % strItem is found in the file, but objValue is different
         cellOptions{vecBoolOptions,2} = objValue;
-    else
-        %Nothing changed
-        return
     end
     
     writetable(cell2table(cellOptions),strFileOptions,'Delimiter',',',...
