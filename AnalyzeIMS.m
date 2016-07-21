@@ -561,6 +561,11 @@ buttPopOutFigure = uicontrol('Style','pushbutton', 'Units', 'normalized',...
         xlabel('Compensation Voltage (V)');
         ylabel('Retention Time (s)');
         zlabel('Intensity');
+        
+        strCurrSpectra = get(menuSpectraSelection, 'String');
+        strCurrSpectra = strCurrSpectra{get(menuSpectraSelection, 'Value')};
+        title(sprintf('%s   (%s)', cellPlaylist{currFigure,2},...
+            strCurrSpectra(1:3)));
 
         c = colorbar;
         
