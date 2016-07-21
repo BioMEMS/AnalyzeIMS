@@ -21,9 +21,30 @@ vecBoolColEditable = [true false false];
 
 vecPopOutFigureSize = [ -1200 300 950 700 ];  %Powerpoint
 
+strFileOptions = 'options.inf';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Initialize Values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Variables set in options.inf
+
+cellOptions = cell(0,2);
+strCommonFolder = '';
+
+if ~isempty(dir(strFileOptions))
+    cellOptions = table2cell(readtable( strFileOptions, 'Delimiter',',',...
+        'FileType', 'text', 'ReadVariableNames', false));
+    
+    % To not have dynamically assigned variable names, the following is the
+    % best I could come up with, which truly sucks... (And has to be
+    % retyped for every option used).
+    vecBool = strcmp(cellOptions(:,1), 'strCommonFolder');
+    if any(vecBool)
+        strCommonFolder = cellOptions{vecBool,2};
+    end
+    
+end
 
 cellPreProcessing = {};
 cellCategoryInfo = {};
@@ -38,8 +59,6 @@ currFigure = 1;
 
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
-
-strCommonFolder = '';
 
 strSoftwareName = 'AIMS, Version 1.2';
 
@@ -62,6 +81,8 @@ strAddNewClassification = 'Add New Classification';
 strNewClassification = '';      
     %Variable to be able to pass between the new window with classification
     %name 
+
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Draw Objects
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -658,7 +679,7 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Cle
         vecSortColumns = [0, 0, 1, 0];
         boolEmptyPlot = true;
 
-        strCommonFolder = '';   
+%         strCommonFolder = '';   
         boolAxisRangesSet = false;
 
         funcRefreshPlaylist;
@@ -669,12 +690,11 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Add
     'Position',[.14 .96 .16 .03], 'BackgroundColor', colorGrey,...
     'Callback',{@buttAddFilesPlaylists_Callback});
     function buttAddFilesPlaylists_Callback(~,~) 
-        strFolderCurr = get(textCommonFolder, 'string');
         [nameFile, namePath, boolSuccess] = uigetfile( ...
             {'*.xls',  'GC/DMS Data (*.xls)'; ...
             '*.*',  'All Files (*.*)'}, ...
             'Select HDR.xls file(s)...',...
-            'MultiSelect', 'on', strFolderCurr);
+            'MultiSelect', 'on', strCommonFolder);
 
         if boolSuccess
             if iscell(nameFile)
@@ -845,8 +865,7 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Add
     'Position',[.32 .96 .16 .03], 'BackgroundColor', colorGrey,...
     'Callback',{@buttAddFolder_Callback});
     function buttAddFolder_Callback(~,~) 
-        strFolderCurr = get(textCommonFolder, 'string');
-        nameFolder = uigetdir(strFolderCurr, 'Select Folder...');
+        nameFolder = uigetdir(strCommonFolder, 'Select Folder...');
 
         if nameFolder ~= 0
             listAddFiles = getNestedList(nameFolder);
@@ -865,12 +884,11 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Loa
             return
         end
         
-        strFolderCurr = get(textCommonFolder, 'string');
         [nameFile, namePath, boolSuccess] = uigetfile( ...
             {'*.mat',  'Model File (*.mat)'; ...
             '*.*',  'All Files (*.*)'}, ...
             'Select Model File...',...
-            'MultiSelect', 'off', strFolderCurr);
+            'MultiSelect', 'off', strCommonFolder);
         
         if boolSuccess
             strFilename = [namePath, nameFile];
@@ -1580,12 +1598,11 @@ uicontrol(tabModel, 'Style','pushbutton',...
         end
         
         if valModelType == 0
-            strFolderCurr = get(textCommonFolder, 'string');
             [nameFile, namePath, boolSuccess] = uiputfile( ...
                 {'*.mat',  'Model Data (*.mat)'; ...
                 '*.*',  'All Files (*.*)'}, ...
                 'Name of Model to Be Saved...',...
-                sprintf('%sNew Model.mat', strFolderCurr));
+                sprintf('%sNew Model.mat', strCommonFolder));
 
             if boolSuccess
                 strFilename = {[namePath, nameFile]};
@@ -2218,6 +2235,31 @@ function funcSetMaxes()
     end
 end
 
+function funcStoreOption(strItem, objValue)
+    vecBoolOptions = strcmp(cellOptions(:,1), strItem);
+    if sum(vecBoolOptions) > 1
+        error('funcStoreOption: Multiple of requested item %s in cellOptions',...
+            strItem);
+    end
+    
+    if sum(vecBoolOptions) == 0
+        % Empty cellOptions or item not entered in it yet
+        cellOptions = [cellOptions; cell(1,2)];
+        cellOptions{end,1} = strItem;
+        cellOptions{end,2} = objValue;
+    elseif ~all(cellOptions{vecBoolOptions,2} == objValue)
+        % strItem is found in the file, but objValue is different
+        cellOptions{vecBoolOptions,2} = objValue;
+    else
+        %Nothing changed
+        return
+    end
+    
+    writetable(cell2table(cellOptions),strFileOptions,'Delimiter',',',...
+            'FileType', 'text', 'WriteVariableNames', false)
+    
+end
+
 function funcRefreshPlaylist()
     %Refresh the playlist so that it is displayed appropriately
     
@@ -2272,6 +2314,7 @@ function funcRefreshPlaylist()
                 cellPlaylist(:,2) = cellfun(@(x) {x(locCurrSlash+1:end)}, cellFilenames);
             end
             set(textCommonFolder, 'String', strCommonFolder);
+            funcStoreOption('strCommonFolder', strCommonFolder);
         end
         
         boolRawData = get(buttonToggleButton, 'value');
@@ -2351,9 +2394,11 @@ function funcRefreshPlaylist()
         caxis([valMinZ, valMaxZ]);
         set(textCurrFile, 'String', strTitle);
         boolEmptyPlot = false;
-    else
-        strCommonFolder = '';
-        set(textCommonFolder, 'String', strCommonFolder);
+    % 20160721 Commented out in preparation for accessing options.inf and
+    % keeping strCommonFolder more "sticky".
+%     else
+%         strCommonFolder = '';
+%         set(textCommonFolder, 'String', strCommonFolder);
     end
     
     set(objTableMain, 'data', cellPlaylist);

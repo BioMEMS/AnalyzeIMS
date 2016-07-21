@@ -21,9 +21,30 @@ vecBoolColEditable = [true false false];
 
 vecPopOutFigureSize = [ -1200 300 950 700 ];  %Powerpoint
 
+strFileOptions = 'options.inf';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Initialize Values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Options set in options.inf
+
+    
+%     writetable(cell2table(cellOptions),strFileOptions,'Delimiter',',',...
+%             'FileType', 'text', 'WriteVariableNames', false)
+
+if ~isempty(dir(strFileOptions))
+    cellOptions = table2cell(readtable( strFileOptions, 'Delimiter',',',...
+        'FileType', 'text', 'ReadVariableNames', false));
+    
+    strVar
+    for globalVarI=1:size(cellOptions,1)
+        
+    end
+else
+    cellOptions = cell(0,2);
+    strCommonFolder = '';
+end
 
 cellPreProcessing = {};
 cellCategoryInfo = {};
@@ -38,8 +59,6 @@ currFigure = 1;
 
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
-
-strCommonFolder = '';
 
 strSoftwareName = 'AIMS, Version 1.2';
 
@@ -62,6 +81,8 @@ strAddNewClassification = 'Add New Classification';
 strNewClassification = '';      
     %Variable to be able to pass between the new window with classification
     %name 
+
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Draw Objects
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -623,12 +644,19 @@ tabGroupMain = uitabgroup('Units', 'normalized',...
 tabSamples = uitab(tabGroupMain, 'Title', 'Samples');
 tabPreprocessing = uitab(tabGroupMain, 'Title', 'Preprocessing');
 tabSupervisedAnalysis = uitab(tabGroupMain, 'Title', 'Supervised Analysis');
+tabVisualizationTools = uitab(tabGroupMain, 'Title', 'Visualization Tools');
 
-tabGroupSupervisedAnalysis = uitabgroup(tabSupervisedAnalysis,'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'Position', [0.51 0.01 0.48 0.96]);
+tabGroupSupervisedAnalysis = uitabgroup(tabSupervisedAnalysis,...
+    'Units', 'normalized', 'BackgroundColor', colorGrey,...
+    'Position', [0.01 0.01 0.98 0.98]);
+tabModel = uitab(tabGroupSupervisedAnalysis, 'Title', 'Model');
+tabPrediction = uitab(tabGroupSupervisedAnalysis, 'Title', 'Prediction');
 
-tabModel = uitab(tabGroupMain, 'Title', 'Model');
-tabPrediction = uitab(tabGroupMain, 'Title', 'Prediction');
+tabGroupVisualizationTools = uitabgroup(tabVisualizationTools,...
+    'Units', 'normalized', 'BackgroundColor', colorGrey,...
+    'Position', [0.01 0.01 0.98 0.98]);
+tabImageScanner = uitab(tabGroupVisualizationTools, 'Title', 'Image Scanner');
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Data Tab
@@ -651,7 +679,7 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Cle
         vecSortColumns = [0, 0, 1, 0];
         boolEmptyPlot = true;
 
-        strCommonFolder = '';   
+%         strCommonFolder = '';   
         boolAxisRangesSet = false;
 
         funcRefreshPlaylist;
@@ -2211,6 +2239,31 @@ function funcSetMaxes()
     end
 end
 
+function funcStoreOption(strItem, objValue)
+    vecBoolOptions = strcmp(cellOptions(:,1), strItem);
+    if sum(vecBoolOptions) > 1
+        error('funcStoreOption: Multiple of requested item %s in cellOptions',...
+            strItem);
+    end
+    
+    if sum(vecBoolOptions) == 0
+        % Empty cellOptions or item not entered in it yet
+        cellOptions = [cellOptions; cell(1,2)];
+        cellOptions{end,1} = strItem;
+        cellOptions{end,2} = objValue;
+    elseif ~all(cellOptions(vecBoolOptions,2) == objValue)
+        % strItem is found in the file, but objValue is different
+        cellOptions(vecBoolOptions,2) = objValue;
+    else
+        %Nothing changed
+        return
+    end
+    
+    writetable(cell2table(cellOptions),strFileOptions,'Delimiter',',',...
+            'FileType', 'text', 'WriteVariableNames', false)
+    
+end
+
 function funcRefreshPlaylist()
     %Refresh the playlist so that it is displayed appropriately
     
@@ -2265,6 +2318,7 @@ function funcRefreshPlaylist()
                 cellPlaylist(:,2) = cellfun(@(x) {x(locCurrSlash+1:end)}, cellFilenames);
             end
             set(textCommonFolder, 'String', strCommonFolder);
+            funcStoreOption('strCommonFolder', strCommonFolder);
         end
         
         boolRawData = get(buttonToggleButton, 'value');
@@ -2344,9 +2398,11 @@ function funcRefreshPlaylist()
         caxis([valMinZ, valMaxZ]);
         set(textCurrFile, 'String', strTitle);
         boolEmptyPlot = false;
-    else
-        strCommonFolder = '';
-        set(textCommonFolder, 'String', strCommonFolder);
+    % 20160721 Commented out in preparation for accessing options.inf and
+    % keeping strCommonFolder more "sticky".
+%     else
+%         strCommonFolder = '';
+%         set(textCommonFolder, 'String', strCommonFolder);
     end
     
     set(objTableMain, 'data', cellPlaylist);

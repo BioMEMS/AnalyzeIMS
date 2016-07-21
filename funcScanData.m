@@ -50,7 +50,7 @@ for i=1:numPOS
             arrScanNeg{i} = [];
         end
         
-    catch err 
+    catch err  %#ok<NASGU>
         warning('funcScanData:DMSReadFail',...
             'DMSRead failed on file: \n %s \n', listFiles{i})
         arrVC{i} = [];
@@ -77,7 +77,7 @@ for i=1:numPOS
         vecRF = vecRFValues(1) + vecRFValues(2)*vecRF(:);
         
         if vecRFValues(3) > length(arrTimeStamp{i})
-            warning('funcScanData.m: Number of RF measurements not equal to the number of steps from Hdr for file %s.',...
+            fprintf('DJPWarning: funcScanData.m - Number of RF measurements less than the number of steps from Hdr for file %s.\n',...
                 listFiles{i});
             
             vecRF = vecRF(1:length(arrTimeStamp{i}));
@@ -87,7 +87,7 @@ for i=1:numPOS
             % doing slicing for this, so just cutting it off.  (Other
             % problem with slicing was that the intensity of the initial
             % sample was lowered because of the follow up reading.)
-            warning('funcScanData.m: Number of RF measurements not equal to the number of steps from Hdr for file %s.',...
+            fprintf('DJPWarning: funcScanData.m - Number of RF measurements greater than the number of steps from Hdr for file %s.\n',...
                 listFiles{i});
             
             arrTimeStamp{i} = vecRF;
