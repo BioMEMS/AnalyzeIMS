@@ -1000,34 +1000,6 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Loa
     end
 
 %%%%%%%%%%%%%%%%%%%%%
-% Select All Box
-checkboxAllNone = uicontrol(tabSamples, 'Style','checkbox', 'Visible', 'off',...
-    'Units', 'normalized', 'BackgroundColor', colorGrey,...
-    'Callback',{@boxAllNone_Callback}, 'Value', 1,...
-    'Position',[.08 .91 .03 .03 ]);
-    function boxAllNone_Callback(~,~)
-        val = get(checkboxAllNone, 'Value');
-        
-        matCurrHighlighted = get(objTableMain, 'UserData');
-        if ~isempty(matCurrHighlighted) %Check that it hasn't been cleared
-            vecBoolCurrCol = logical(matCurrHighlighted(:,2)==2);
-            matCurrHighlighted = matCurrHighlighted(vecBoolCurrCol,:);
-
-            if size(matCurrHighlighted,1) > 1
-                for i=1:size(matCurrHighlighted,1)
-                    cellPlaylist{matCurrHighlighted(i,1),1} = logical(val);
-                end
-            else
-                for i=1:size(cellPlaylist,1)
-                    cellPlaylist{i,1} = logical(val);
-                end
-            end
-        end
-
-        funcRefreshPlaylist
-    end
-
-%%%%%%%%%%%%%%%%%%%%%
 % Shared Parent Folder Text
 textCommonFolder = uicontrol(tabSamples, 'Style','text',...
     'String',strCommonFolder,...
@@ -1044,7 +1016,9 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
     'Data', cellPlaylist, 'CellEditCallback', {@tableEdit_Callback},...
     'CellSelectionCallback', {@tableSelection_Callback} );
     function tableSelection_Callback(src, event)
-        set(src,'UserData',event.Indices)
+        if any(event.Indices(:,2) ~= 1)
+            set(src,'UserData',event.Indices)
+        end
         
         vecLoc = event.Indices;
         if numel(vecLoc) >= 2 && vecLoc(2) == 2
@@ -1055,10 +1029,20 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
     function tableEdit_Callback(~, event)
         vecLoc = event.Indices;
         if vecLoc(2)==1
-            cellPlaylist{vecLoc(1), 1} = event.NewData;
-            if (vecLoc(1) == currFigure && event.NewData == false)...
-                    || (event.NewData==true && cellPlaylist{currFigure,1}==false)
+            matCurrHighlighted = get(objTableMain, 'UserData');
+            vecBoolCurrCol = false(size(cellPlaylist,1), 1);
+            vecBoolCurrCol(matCurrHighlighted(matCurrHighlighted(:,2)==2,1)) = true;
+                % Only highlighting 2nd row in the table so that will be
+                % the column the highlights are located.
+            vecBoolCurrCol(vecLoc(1)) = true;   
+                % Ensure the checkbox being used is included, even if not
+                % highlighted.
+
+            cellPlaylist(vecBoolCurrCol, 1) = {event.NewData};
+            if any(vecBoolCurrCol(currFigure)) && event.NewData == false
                 funcChangeSample(1);
+            else
+                funcRefreshPlaylist();
             end
         end
         
@@ -2283,7 +2267,6 @@ function funcRefreshPlaylist()
             funcSetMaxes;
         end
         
-        set(checkboxAllNone, 'Visible', 'on');
         indxNum = (1:size(cellPlaylist,1))';
         if vecSortColumns(3)==1
             vecDateNum = datenum(cellPlaylist(:,3), 'dd-mmm-yyyy HH:MM:SS');
