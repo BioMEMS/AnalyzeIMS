@@ -1031,9 +1031,14 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
         if vecLoc(2)==1
             matCurrHighlighted = get(objTableMain, 'UserData');
             vecBoolCurrCol = false(size(cellPlaylist,1), 1);
-            vecBoolCurrCol(matCurrHighlighted(matCurrHighlighted(:,2)==2,1)) = true;
-                % Only highlighting 2nd row in the table so that will be
-                % the column the highlights are located.
+            
+            if ~isempty(matCurrHighlighted)
+                vecBoolCurrCol(...
+                    matCurrHighlighted(matCurrHighlighted(:,2)==2,1) )...
+                    = true;
+                    % Only highlighting 2nd row in the table so that will be
+                    % the column the highlights are located.
+            end
             vecBoolCurrCol(vecLoc(1)) = true;   
                 % Ensure the checkbox being used is included, even if not
                 % highlighted.

@@ -63,42 +63,54 @@ for i=1:numPOS
         continue
     end
     
-    % Identify if Dispersion Plot
-    [~, cellRFData]...
-        = funcReadHeaderFile([listFiles{i}, '_Hdr.xls'],...
-        {'' 'RF Voltage (V)'; '' 'RF Step Size (V)'; '' 'RF Steps'});
-    if size(cellRFData,1) ~= 3
-        error('funcScanData.m: Error reading RF values from Header File %s.',...
-            listFiles{i});
+    
+    % Identify if HALF-IMS Data
+    [cellHeaderData]...
+        = funcReadHeaderFile([listFiles{i}, '_Hdr.xls'],{});
+%     disp(cellHeaderData);
+    if any(strcmp(cellHeaderData(:,2), 'Long/Short'))
+        boolHALFIMSFile = 1;
     end
-    vecRFValues = str2double(cellRFData(:,3));
-    if vecRFValues(2) * vecRFValues(3) ~= 0
-        vecRF = 0:( vecRFValues(3)-1 );
-        vecRF = vecRFValues(1) + vecRFValues(2)*vecRF(:);
-        
-        if vecRFValues(3) > length(arrTimeStamp{i})
-            fprintf('DJPWarning: funcScanData.m - Number of RF measurements less than the number of steps from Hdr for file %s.\n',...
+    
+    if ~boolHALFIMSFile
+        % Identify if Dispersion Plot
+        [~, cellRFData]...
+            = funcReadHeaderFile([listFiles{i}, '_Hdr.xls'],...
+            {'' 'RF Voltage (V)'; '' 'RF Step Size (V)'; '' 'RF Steps'});
+        if size(cellRFData,1) ~= 3
+            warning('DJPWarning:funcScanData.m: Unable to read RF values from Header File %s.',...
                 listFiles{i});
-            
-            vecRF = vecRF(1:length(arrTimeStamp{i}));
-            arrTimeStamp{i} = vecRF;
-        elseif vecRFValues(3) < length(arrTimeStamp{i})
-            % This came up when multiple scans were read at once.  Not
-            % doing slicing for this, so just cutting it off.  (Other
-            % problem with slicing was that the intensity of the initial
-            % sample was lowered because of the follow up reading.)
-            fprintf('DJPWarning: funcScanData.m - Number of RF measurements greater than the number of steps from Hdr for file %s.\n',...
-                listFiles{i});
-            
-            arrTimeStamp{i} = vecRF;
-            matPos = arrScanPos{i};
-            matNeg = arrScanNeg{i};
-            arrScanPos{i} = matPos(1:vecRFValues(3), :);
-            arrScanNeg{i} = matNeg(1:vecRFValues(3), :);
         else
-            arrTimeStamp{i} = vecRF;
+            vecRFValues = str2double(cellRFData(:,3));
+            if vecRFValues(2) * vecRFValues(3) ~= 0
+                vecRF = 0:( vecRFValues(3)-1 );
+                vecRF = vecRFValues(1) + vecRFValues(2)*vecRF(:);
+
+                if vecRFValues(3) > length(arrTimeStamp{i})
+                    fprintf('DJPWarning: funcScanData.m - Number of RF measurements less than the number of steps from Hdr for file %s.\n',...
+                        listFiles{i});
+
+                    vecRF = vecRF(1:length(arrTimeStamp{i}));
+                    arrTimeStamp{i} = vecRF;
+                elseif vecRFValues(3) < length(arrTimeStamp{i})
+                    % This came up when multiple scans were read at once.  Not
+                    % doing slicing for this, so just cutting it off.  (Other
+                    % problem with slicing was that the intensity of the initial
+                    % sample was lowered because of the follow up reading.)
+                    fprintf('DJPWarning: funcScanData.m - Number of RF measurements greater than the number of steps from Hdr for file %s.\n',...
+                        listFiles{i});
+
+                    arrTimeStamp{i} = vecRF;
+                    matPos = arrScanPos{i};
+                    matNeg = arrScanNeg{i};
+                    arrScanPos{i} = matPos(1:vecRFValues(3), :);
+                    arrScanNeg{i} = matNeg(1:vecRFValues(3), :);
+                else
+                    arrTimeStamp{i} = vecRF;
+                end
+
+            end
         end
-        
     end
 end
 
