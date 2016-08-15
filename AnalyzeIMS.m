@@ -19,7 +19,9 @@ cellColWidths = {50, 200, 150};
 cellColFormats = {'logical', 'char', 'char'};  %Have to format our own date/time
 vecBoolColEditable = [true false false];
 
-vecPopOutFigureSize = [ -1200 300 950 700 ];  %Powerpoint
+% vecPopOutFigureSize = [ -1200 300 950 700 ];  %Powerpoint
+
+vecPopOutFigureSize = [ 200 300 950 700 ];
 
 strFileOptions = 'options.inf';
 
@@ -60,7 +62,7 @@ currFigure = 1;
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
 
-strSoftwareName = 'AIMS, Version 1.21';
+strSoftwareName = 'AIMS, Version 1.22';
 
 ptrPreviousToast = -1;
 
@@ -1049,6 +1051,8 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
             else
                 funcRefreshPlaylist();
             end
+            
+            set(objTableMain, 'UserData', '');
         end
         
         if vecLoc(2) > length(cellColNames)

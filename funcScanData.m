@@ -23,6 +23,7 @@ function [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(listFiles)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+boolHALFIMSFile = 0;
 
 numPOS = length(listFiles);
 disp(numPOS);
