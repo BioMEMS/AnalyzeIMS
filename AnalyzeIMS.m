@@ -21,7 +21,13 @@ vecBoolColEditable = [true false false];
 
 % vecPopOutFigureSize = [ -1200 300 950 700 ];  %Powerpoint
 
-vecPopOutFigureSize = [ 200 300 950 700 ];
+matMonitorPositions = get(0, 'MonitorPositions');
+
+if size(matMonitorPositions,1) == 1
+    vecPopOutFigureSize = [ 200 300 950 700 ];
+else
+    vecPopOutFigureSize = [ -1200 300 950 700 ];
+end
 
 strFileOptions = 'options.inf';
 
