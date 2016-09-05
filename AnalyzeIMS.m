@@ -2095,6 +2095,7 @@ function funcApplyPreProcessing
     
     cellTemp = cellData(:,3);
     vecBoolBaseline = false(size(vecBoolDirty));
+    vecBoolNumIterationsWarning = false(size(vecBoolDirty));
     parfor i=1:length(vecBoolDirty)       
         if vecBoolDirty(i)
             tempMat = cellTemp{i};
@@ -2105,7 +2106,8 @@ function funcApplyPreProcessing
                         tempCellPreProcessing{j,3}(1) )
                 end
                 if strcmp(tempCellPreProcessing{j,1}, 'Baseline - ALS')
-                    tempMat = funcAsymmetricLeastSquaresBaselineRemoval( tempMat,...
+                    [tempMat, ~, vecBoolNumIterationsWarning(i)]...
+                        = funcAsymmetricLeastSquaresBaselineRemoval( tempMat,...
                         tempCellPreProcessing{j,3}(1),...
                         tempCellPreProcessing{j,3}(2) )
                     vecBoolBaseline(i) = true;
@@ -2137,7 +2139,8 @@ function funcApplyPreProcessing
                         tempCellPreProcessing{j,3}(1) )
                 end
                 if strcmp(tempCellPreProcessing{j,1}, 'Baseline - ALS')
-                    tempMat = funcAsymmetricLeastSquaresBaselineRemoval( tempMat,...
+                    [tempMat, ~, vecBoolNumIterationsWarning(i)]...
+                        = funcAsymmetricLeastSquaresBaselineRemoval( tempMat,...
                         tempCellPreProcessing{j,3}(1),...
                         tempCellPreProcessing{j,3}(2) )
                 end                
@@ -2146,6 +2149,13 @@ function funcApplyPreProcessing
         end
     end
     cellData(vecBoolNegAndDirty,4) = cellTemp(vecBoolNegAndDirty);
+    
+    % Kick out warning if the number of iterations required to identify the
+    % ALS baseline was equal to the threshold set inside of the function.
+    if any(vecBoolNumIterationsWarning)
+        funcToast('Please Contact Daniel, and tell him that the ALS iteration threshold was reached!  Thanks!',...
+            'numIterations Threshold in ALS reached', 'warn');
+    end
     
     
     %Weighted Normalization Application
@@ -2167,17 +2177,19 @@ function funcApplyPreProcessing
     end
     
     vecBoolDirty = false(size(vecBoolDirty));
-    if ishandle(ptrPreviousToast)
-        % 5/28/2016 I seem to be having trouble pushing the primary axes
-        % back to the main axis if there is a toast.  Therefore the toast
-        % needs to be closed in order to guarantee that I can plot the
-        % data.  Probably will just have to clarify when drawing a figure
-        % each time for what axis I mean, but for now, closing the toast
-        % before proceeding.
-        
-        close(ptrPreviousToast)
-    end
+%     if ishandle(ptrPreviousToast)
+%         % 5/28/2016 I seem to be having trouble pushing the primary axes
+%         % back to the main axis if there is a toast.  Therefore the toast
+%         % needs to be closed in order to guarantee that I can plot the
+%         % data.  Probably will just have to clarify when drawing a figure
+%         % each time for what axis I mean, but for now, closing the toast
+%         % before proceeding.
+%         
+%         close(ptrPreviousToast)
+%     end
     
+    axes(objAxisMain)
+
     if any(vecBoolBaseline)
         boolPreProcessingContainsBaseline = true;
     else

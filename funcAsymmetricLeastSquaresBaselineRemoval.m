@@ -1,4 +1,5 @@
-function [matOut, matZ] = funcAsymmetricLeastSquaresBaselineRemoval( matY, valLambda,...
+function [matOut, matZ, boolNumIterationsWarning]...
+    = funcAsymmetricLeastSquaresBaselineRemoval( matY, valLambda,...
     valProportionPositiveResiduals )
 % Asymmetric Least Squares Function  (Not Basis Method)
 % Function is described in paper by Eilers, Boelens from 10/21/2005.
@@ -9,6 +10,16 @@ function [matOut, matZ] = funcAsymmetricLeastSquaresBaselineRemoval( matY, valLa
 % y) should be between 10^2 and 10^9
 % matY can be a vector, or a matrix that will analyze each column
 % individually
+
+% 05SEP2016 Adding a flag to identify if we hit the artificial number of
+% iterations that were originally set based on Eilers and Boelens paper.
+% It appears that they were indicating that this number should never occur,
+% and it was just a lazy way of making a while loop, but if I turn it off,
+% it could cause some problems such as a situation where there is no
+% convergence.  Therefore, going to place a flag that will indicate to the
+% user to contact me if this occurs so I can identify if this is actually
+% an issue.  Hopefully in a future version, we can properly make this a
+% while loop, and remove the warnings, etc.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Debug
@@ -24,7 +35,8 @@ function [matOut, matZ] = funcAsymmetricLeastSquaresBaselineRemoval( matY, valLa
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Variable Initialization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numIterations = 10;
+numIterations = 20;
+boolNumIterationsWarning = 0;
 
 %matY has to be positive definite, and some of Yuriy's data comes in
 %negative, so fixing that...
@@ -66,6 +78,10 @@ for j=1:size(matY,2)
         end
 
         vecZOld = vecZ;
+    end
+    
+    if i == numIterations
+        boolNumIterationsWarning = 1;
     end
     
     matZ(:,j) = vecZ;
