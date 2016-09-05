@@ -8,7 +8,13 @@ function [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(listFiles)
 % flag) in the future.
 
 % 20160720 Adding the ability to judge if a file was collected as a
-% dispersion plot, and return a flag indicating that.
+% dispersion plot, and return a flag indicating that.  A dispersion plot is
+% a method of using a DMS device so that the separation voltage (instead of
+% a hyphenated device metric such as retention time) is used as an
+% orthogonal method of separation. Sionex based devices output the same
+% file structure but include information in the _HDR.xls files to indicate
+% that the values measured in time can be converted to voltages, and adding
+% this capability in AIMS is quite straight-forward.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Debug
@@ -23,8 +29,6 @@ function [arrVC, arrTimeStamp, arrScanPos, arrScanNeg] = funcScanData(listFiles)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-boolHALFIMSFile = 0;
-
 numPOS = length(listFiles);
 disp(numPOS);
 
@@ -65,15 +69,11 @@ for i=1:numPOS
     end
     
     
-    % Identify if HALF-IMS Data
+    % Identify if Dispersion Plot
     [cellHeaderData]...
         = funcReadHeaderFile([listFiles{i}, '_Hdr.xls'],{});
-%     disp(cellHeaderData);
-    if any(strcmp(cellHeaderData(:,2), 'Long/Short'))
-        boolHALFIMSFile = 1;
-    end
-    
-    if ~boolHALFIMSFile
+
+    if any(strcmp(cellHeaderData(:,2), 'RF Step Size (V)'))
         % Identify if Dispersion Plot
         [~, cellRFData]...
             = funcReadHeaderFile([listFiles{i}, '_Hdr.xls'],...

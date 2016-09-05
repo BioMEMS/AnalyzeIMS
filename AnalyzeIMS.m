@@ -68,7 +68,7 @@ currFigure = 1;
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
 
-strSoftwareName = 'AIMS, Version 1.22';
+strSoftwareName = 'AIMS, Version 1.25';
 
 ptrPreviousToast = -1;
 
@@ -889,8 +889,9 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Add
 % Button to Load Model
 uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Load Model',...
     'Position',[.56 .96 .16 .03], 'BackgroundColor', colorGrey,...
-    'Callback',{@buttLoadModel_Callback}, 'visible', 'off');
-    function buttLoadModel_Callback(~,~)
+    'Callback',{@buttLoadModel_Alternate}, 'visible', 'on');
+%     'Callback',{@buttLoadModel_Callback}, 'visible', 'off');
+    function buttLoadModel_Callback(~,~) %#ok<DEFNU>
         if isempty(cellPlaylist)
             funcToast('Please Add Files to be analyzed before loading Model',...
                 'No Files Loaded', 'warn');
@@ -1007,6 +1008,10 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Loa
         menuCategory_Callback;
     end
 
+    function buttLoadModel_Alternate(~, ~)
+        funcToast('The ability to create a load models is not available in this version.  Most recent Version this was available was V 1.12, and planned to be reimplemented in V 1.35',...
+            'Model Building', 'warn');
+    end
 %%%%%%%%%%%%%%%%%%%%%
 % Shared Parent Folder Text
 textCommonFolder = uicontrol(tabSamples, 'Style','text',...
