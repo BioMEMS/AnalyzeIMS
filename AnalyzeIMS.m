@@ -672,7 +672,7 @@ tabPrediction = uitab(tabGroupSupervisedAnalysis, 'Title', 'Prediction');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Data Tab
+% Samples Tab
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%
@@ -1012,19 +1012,100 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Loa
         funcToast('The ability to create a load models is not available in this version.  Most recent Version this was available was V 1.12, and planned to be reimplemented in V 1.35',...
             'Model Building', 'warn');
     end
+
+% Button to Output Information on Samples
+uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized',...
+    'String','Output Samples',...
+    'Position',[.56 .925 .16 .03], 'BackgroundColor', colorGrey,...
+    'Callback',{@buttOutputSamples_Callback}, 'visible', 'on');
+    function buttOutputSamples_Callback(~, ~)
+        numPCs = 2;
+        [nameFile, namePath, boolSuccess] = uiputfile( ...
+            {'*.csv',  'Comma Separated Values(*.csv)'}, ...
+            'Select CSV file to store sample information...',...
+            [strCommonFolder, 'Samples.csv']);
+        if boolSuccess
+            strFileName = [namePath, nameFile];
+            
+            % Get PCA Scores
+            valCVHighPos = str2double(get(valCVMaxPos, 'String'));
+            valCVLowPos = str2double(get(valCVMinPos, 'String'));
+            valRTHighPos = str2double(get(valRTMaxPos, 'String'));
+            valRTLowPos = str2double(get(valRTMinPos, 'String'));
+            vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
+            cellLabels = num2str(find(vecUsed), '%d');
+            
+            if get(checkboxIncludeNegativeAnalysis, 'Value') == 0
+                cubeX...
+                    = funcPrepareDataForPCA(cellData(vecUsed,:),...
+                    valCVLowPos, valCVHighPos,...
+                    valRTLowPos, valRTHighPos);
+            else
+                valCVHighNeg = str2double(get(valCVMaxNeg, 'String'));
+                valCVLowNeg = str2double(get(valCVMinNeg, 'String'));
+                valRTHighNeg = str2double(get(valRTMaxNeg, 'String'));
+                valRTLowNeg = str2double(get(valRTMinNeg, 'String'));
+
+                cubeX...
+                    = funcPrepareDataForPCA(cellData(vecUsed,:), valCVLowPos, valCVHighPos,...
+                    valRTLowPos, valRTHighPos, valCVLowNeg, valCVHighNeg, valRTLowNeg,...
+                    valRTHighNeg);
+            end
+            [ ~, matScores, ~, ~, vecPercents ]...
+                = funcUnfoldPCA_NumComp( cubeX, numPCs, 1 );
+       
+            cellUsed = [cell(sum(vecUsed),2),...
+                cellPlaylist(vecUsed,2:end),...
+                cell(sum(vecUsed),numPCs)];
+            
+            cellUsed(:,2) = cellfun(@(x) {[strCommonFolder, x]},...
+                cellPlaylist(vecUsed, 2));
+            for i=1:sum(vecUsed)
+                cellUsed{i,1} = strtrim(cellLabels(i,:));
+                for j=1:numPCs
+                    cellUsed{i,j+size(cellPlaylist,2)+1}...
+                        = sprintf('%.4f', matScores(i,j));
+                end
+            end
+            
+            cellExtra = cell(1,numPCs);
+            for i=1:numPCs
+                cellExtra{i} = sprintf('PC %d Scores (%.2f%%)', i,...
+                    vecPercents(i)*100);
+            end
+            
+            cellHeader = [{'Sample Number'},...
+                get(objTableMain, 'ColumnName')', cellExtra];
+            cellHeader{2} = 'Filename (Full)';
+            
+            
+%             disp(size(cellUsed))
+            cellUsed = [cellHeader; cellUsed];
+            
+            funcCell2CSV(cellUsed, strFileName)
+            
+%             assignin('base', 'cellUsed', cellUsed);
+            
+%             disp('Output Samples Function:');
+%             display(strFileName)
+%             display(cellUsed)
+%             display(matScores)
+%             display(vecPercents)
+        end
+    end
 %%%%%%%%%%%%%%%%%%%%%
 % Shared Parent Folder Text
 textCommonFolder = uicontrol(tabSamples, 'Style','text',...
     'String',strCommonFolder,...
     'Units', 'normalized', 'HorizontalAlignment', 'left',...
-    'BackgroundColor', colorGrey, 'Position',[.12 .90 .56 .025 ]);
+    'BackgroundColor', colorGrey, 'Position',[.01 .855 .67 .06 ]);
 
 %%%%%%%%%%%%%%%%%%%%%
 % Main Table
 objTableMain = uitable(tabSamples, 'Units', 'normalized',...
     'ColumnName', cellColNames,...
     'ColumnWidth', cellColWidths, 'ColumnFormat', cellColFormats,...
-    'Position', [0 0 1 0.9], 'ColumnEditable', vecBoolColEditable,...
+    'Position', [0 0 1 0.85], 'ColumnEditable', vecBoolColEditable,...
     'RearrangeableColumns', 'on',...
     'Data', cellPlaylist, 'CellEditCallback', {@tableEdit_Callback},...
     'CellSelectionCallback', {@tableSelection_Callback} );

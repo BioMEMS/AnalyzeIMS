@@ -7,41 +7,20 @@ function funcPCAOneWindow(cellData, valCVLowPos, valCVHighPos, valRTLowPos,...
 %size.
 
 numPCs = 2;
-numSamps = size(cellData,1);
 
 if nargin == 6
     boolIncludeNeg = false;
+    [cubeX, numCVPos, numRTPos, numCVNeg, numRTNeg, arrCVPos, arrRTPos,...
+        arrCVNeg, arrRTNeg]...
+        = funcPrepareDataForPCA(cellData, valCVLowPos, valCVHighPos,...
+        valRTLowPos, valRTHighPos);
 else
     boolIncludeNeg = true;
-end
-
-[cubeXPos, arrCVPos, arrRTPos] = funcCellToCube(cellData, valCVLowPos,...
-    valCVHighPos, valRTLowPos, valRTHighPos);
-numCVPos = length(arrCVPos{1});
-numRTPos = length(arrRTPos{1});
-
-cubeX = reshape(cubeXPos, size(cubeXPos,1), numel(cubeXPos)/size(cubeXPos,1));
-if boolIncludeNeg
-    [cubeXNeg, arrCVNeg, arrRTNeg] = funcCellToCube(cellData(:,[1,2,4]),...
-        valCVLowNeg, valCVHighNeg, valRTLowNeg, valRTHighNeg);
-    cubeXNeg = reshape(cubeXNeg, size(cubeXNeg,1), numel(cubeXNeg)/size(cubeXNeg,1));
-    numCVNeg = length(arrCVNeg{1});
-    numRTNeg = length(arrRTNeg{1});
-    
-    cubeX = [cubeX, cubeXNeg];
-end
-
-%%%% Then address how to make the graphic work properly below, and go from
-%%%% there...
-
-
-%%%%
-% Normalize the Mean
-vecSumCube = sum(cubeX, 2);
-valMeanCube = mean(vecSumCube);
-vecInvertSum = valMeanCube ./ vecSumCube;
-for i=1:numSamps
-    cubeX(i,:) = cubeX(i,:) * vecInvertSum(i);
+    [cubeX, numCVPos, numRTPos, numCVNeg, numRTNeg, arrCVPos, arrRTPos,...
+        arrCVNeg, arrRTNeg]...
+        = funcPrepareDataForPCA(cellData, valCVLowPos, valCVHighPos,...
+        valRTLowPos, valRTHighPos, valCVLowNeg, valCVHighNeg, valRTLowNeg,...
+        valRTHighNeg);
 end
 
 %%%%
