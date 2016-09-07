@@ -6,6 +6,17 @@ function funcPCAOneWindow(cellData, valCVLowPos, valCVHighPos, valRTLowPos,...
 %smallest number of scans in a sample and lower all samples to be that
 %size.
 
+% 20160906 Modifying the interaction with variable cellLabels.  Three total
+% formats of cellLabels:
+% A) Same length as number of samples in cellData AND 1st Entry converts to
+% number - Legacy with numeric labels applied
+% B) Length = numSamples + 1 AND 1st Entry = 'Classification' -
+% Classification with colors applied to each classification (with legend)
+% C) Length = 3 AND 1st Entry = 'Regression' - Regression, with unit in 2nd
+% cell and vector of assigned values in third cell. (Legend should occur
+% that shows corresponding values)
+
+
 numPCs = 2;
 
 if nargin == 6
@@ -94,10 +105,76 @@ valComp1 = 1;
 valComp2 = 2;
 
 subplot(1,4,1:2)
+% disp(cellLabels(1,:))
+% strcmp(num2str(str2double(cellLabels(1,:))), cellLabels(1,:))
+if length(cellLabels) == size(matScores, 1)...
+        && strcmp(num2str(str2double(cellLabels(1,:))), cellLabels(1,:))
+    %Legacy Format where each score is labelled by the sample number
+    scatter(matScores(:,valComp1), matScores(:,valComp2))
+    text(matScores(:,valComp1), matScores(:,valComp2), cellLabels,...
+        'horizontal','left', 'vertical','bottom')
+    
+elseif length(cellLabels) == 3 && strcmp(cellLabels{1}, 'Regression')
+    matColormap = funcColorMap('plasma');
+    vecVals = cellLabels{3};
+    
+    matColorDots = interp1(linspace(min(vecVals), max(vecVals),...
+        size(matColormap,1))', matColormap, vecVals);
+    scatter(matScores(:,valComp1), matScores(:,valComp2),...
+        50, matColorDots, 'filled');
+    
+    % Identify values for the legend of regression
+    hold on
+    [vecSort,vecIndx] = sort(vecVals, 'ascend');
+    
+    hdrLow = scatter(matScores(vecIndx(1),valComp1),...
+        matScores(vecIndx(1),valComp2), 50, matColorDots(vecIndx(1),:), 'filled');
+    hdrHigh = scatter(matScores(vecIndx(end),valComp1),...
+        matScores(vecIndx(end),valComp2), 50, matColorDots(vecIndx(end),:), 'filled');
+    
+    % valMiddle is identified as the point in between the highest value and
+    % the lowest value as that would be the "middle color".
+    valMiddle = mean([vecSort(1), vecSort(end)]);
+    [~, indxMiddle] = min(abs(vecVals-valMiddle));
+    hdrMiddle = scatter(matScores(indxMiddle,valComp1),...
+        matScores(indxMiddle,valComp2),...
+        50, matColorDots(indxMiddle,:), 'filled');
+    
+    legend([hdrLow, hdrMiddle, hdrHigh],...
+        sprintf('%s = %s', cellLabels{2}, num2str(vecSort(1)) ),...
+        sprintf('%s = %s', cellLabels{2}, num2str(vecVals(indxMiddle)) ),...
+        sprintf('%s = %s', cellLabels{2}, num2str(vecSort(end)) ) );
+    
+    hold off
+    
+elseif length(cellLabels) == size(matScores, 1) + 1 ...
+        && strcmp(cellLabels{1}, 'Classification')
+    
+    matColormap = colormap('jet');
+    cellLabels(1) = [];
+    
+    [cellUnique, vecLocs, vecVals] = unique(cellLabels);
+    
+    matColorDots = interp1(linspace(0, length(cellUnique)+1,...
+        size(matColormap,1))', matColormap, vecVals);
+    scatter(matScores(:,valComp1), matScores(:,valComp2),...
+        50, matColorDots, 'filled');
+    hold on
+    
+    % Deal with legend
+    vecHeaders = zeros(size(vecLocs));
+    for i=1:length(vecLocs)
+        vecHeaders(i) = scatter(matScores(vecLocs(i),valComp1),...
+            matScores(vecLocs(i),valComp2),...
+            50, matColorDots(vecLocs(i),:), 'filled');
+    end
+        
+    
+    legend(vecHeaders, cellUnique);
+end
 
-scatter(matScores(:,valComp1), matScores(:,valComp2))
-text(matScores(:,valComp1), matScores(:,valComp2), cellLabels,...
-    'horizontal','left', 'vertical','bottom')
+
+
 
 title('Principal Component Scores');
 xlabel(sprintf('PC 1 (%.2f%%)', vecPercents(1,2)*100));
