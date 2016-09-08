@@ -1,6 +1,6 @@
 To cite AnalyzeIMS in publications, please use:
 
-	Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised Semi-Automated Data Analysis Software for Gas Chromatography / Differential Mobility Spectrometry (GC/DMS) Metabolomics Applications. International Journal for Ion Mobility Spectrometry (accepted, in press) DOI: 10.1007/s12127-016-0200-9
+	Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications. International Journal for Ion Mobility Spectrometry 19(2): 155-166. DOI: 10.1007/s12127-016-0200-9
 
 A BibTeX entry for LaTeX users is
 
@@ -11,7 +11,9 @@ and Davis, Cristina E.",
 title="Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications",
 journal="International Journal for Ion Mobility Spectrometry",
 year="2016",
-pages="1--12",
+volume="19",
+number="2",
+pages="155--166",
 abstract="Modern differential mobility spectrometers (DMS) produce complex and multi-dimensional data streams that allow for near-real-time or post-hoc chemical detection for a variety of applications. An active area of interest for this technology is metabolite monitoring for biological applications, and these data sets regularly have unique technical and data analysis end user requirements. While there are initial publications on how investigators have individually processed and analyzed their DMS metabolomic data, there are no user-ready commercial or open source software packages that are easily used for this purpose. We have created custom software uniquely suited to analyze gas chromatograph / differential mobility spectrometry (GC/DMS) data from biological sources. Here we explain the implementation of the software, describe the user features that are available, and provide an example of how this software functions using a previously-published data set. The software is compatible with many commercial or home-made DMS systems. Because the software is versatile, it can also potentially be used for other similarly structured data sets, such as GC/GC and other IMS modalities.",
 issn="1865-4584",
 doi="10.1007/s12127-016-0200-9",

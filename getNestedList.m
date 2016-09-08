@@ -1,11 +1,11 @@
-function [ fileList ] = getNestedList( varargin ) %Read below for
+function [ cellFileList, baseFolderPath ] = getNestedList( varargin ) %Read below for
                                                         %argument info
 
 % Modular way of getting ALL nested files from within a folder.
 %
 % Can take no argument and will use a GUI to get the base folder or can
 % take an argument of the path.
-
+cellFileList = {};
 if nargin == 0
     baseFolderPath = uigetdir('*.xls;*.xlsx',...
         'Select the base folder all files are nested in:');
@@ -16,22 +16,45 @@ end
 currentFolderFileList = dir(baseFolderPath);
     %returns an array (of objects) with the arguments (name, date, bytes, 
     %isdir, datenum) First two arguments are '.' and '..'
-    
-currentFolderFileList = currentFolderFileList(3:end);
 
-fileList={};
-    %Creates a constantly building cell array of filenames
-for i = 1:length(currentFolderFileList)
-    currentFileName = strcat(baseFolderPath,'\',...
-        currentFolderFileList(i).name);
-    if currentFolderFileList(i).isdir
-        fileList = [fileList; getNestedList(currentFileName)];
+if size(currentFolderFileList,1) >= 2
+    if strcmp(currentFolderFileList(1).name, '.')...
+            && strcmp(currentFolderFileList(2).name, '..')
+        currentFolderFileList = currentFolderFileList(3:end);
     else
-        fileList = [fileList; {currentFileName}];
+        vecBoolRemove = ismember({currentFolderFileList(:).name}, {'.', '..'});
+        currentFolderFileList(vecBoolRemove) = [];
+    end
+
+    fileList=cell(length(currentFolderFileList),1);
+        %Creates a constantly building cell array of filenames
+    for i = 1:length(currentFolderFileList)
+        currentFileName = strcat(baseFolderPath,'\',...
+            currentFolderFileList(i).name);
+        if currentFolderFileList(i).isdir
+            cellTemp = getNestedList(currentFileName);
+            cellTemp(end+1) = {currentFileName}; %#ok<AGROW>
+            fileList{i} = cellTemp;
+        else
+            fileList{i} = {currentFileName};
+        end
+    end
+
+    if ~isempty(fileList)
+        vecNumEntries = cellfun(@(x) length(x), fileList);
+        cellFileList = cell(sum(vecNumEntries),1);
+        vecCumSum = [0;cumsum(vecNumEntries)];
+        for i=2:length(vecCumSum)
+            cellFileList(vecCumSum(i-1)+1:vecCumSum(i)) = fileList{i-1};
+        end
     end
 end
+    
 
-end
+
+
+
+
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

@@ -8,7 +8,7 @@ Video demonstrating the software is available at https://youtu.be/L7k310STQmw
 
 Publications (i.e. articles, book chapters, etc.) that use this software are required to cite the related article (http://link.springer.com/article/10.1007/s12127-016-0200-9):  
 
-Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications.  International Journal for Ion Mobility Spectrometry (accepted, in press)  DOI: 10.1007/s12127-016-0200-9
+Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications. International Journal for Ion Mobility Spectrometry 19(2): 155-166. DOI: 10.1007/s12127-016-0200-9
 
 
 

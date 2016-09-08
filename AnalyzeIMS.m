@@ -252,6 +252,27 @@ uicontrol('Style','text', 'String','Include Negative Spectra in Analysis',...
     'Position',[.425 .81 .075 .09 ]);
 
 %%%%%%%%%%%%%%%%%%%%%
+% Text for Spectra Selection
+uicontrol('Style','text',...
+    'String', 'Spectra Shown', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
+    'Position', [.425 .77 .075 .03 ]);
+
+%%%%%%%%%%%%%%%%%%%%%
+% Spectra Selection Dropdown
+menuSpectraSelection = uicontrol('Style','popupmenu',...
+        'String',{'Positive Spectra'; 'Negative Spectra'},...
+        'Value', 1,...
+        'Units', 'normalized',...
+        'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left',...
+        'Position', [.425 .71 .075 .06 ],...
+        'Callback', {@menuSpectraSelection_Callback});
+    function menuSpectraSelection_Callback(~,~)
+        funcRefreshPlaylist()
+    end
+
+%%%%%%%%%%%%%%%%%%%%%
 % Pre-Processing List
 uicontrol('Style','text', 'String','Applied Preprocessing:', 'Units',...
     'normalized', 'BackgroundColor', colorGrey,...
@@ -341,6 +362,7 @@ buttPopOutFigure = uicontrol('Style','pushbutton', 'Units', 'normalized',...
 
         valCurrFigure = gcf;
         valCurrAxes = gca;
+        matColormap = colormap();
 
         set(0, 'showhiddenhandles', 'on');
         valNewFig = figure;
@@ -371,9 +393,13 @@ buttPopOutFigure = uicontrol('Style','pushbutton', 'Units', 'normalized',...
         set(c, 'Position', cpos);
         set(ax, 'Position', axpos);
         
+        colormap(matColormap);
+        
+        %Return to AIMS main        
         set(0, 'currentfigure', valCurrFigure);
         set(valCurrFigure, 'currentaxes', valCurrAxes);
         set(0, 'showhiddenhandles', 'off');
+        
     end
 
 
@@ -421,11 +447,11 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','About',...
         strDisplay = sprintf('%s\n----------------------------------------\n', strSoftwareName);
         strDisplay = sprintf('%s\nDesigned and Coded by:\n     Daniel J. Peirano', strDisplay);
         strDisplay = sprintf('%s\nBased on Analysis Developed by:\n     Alberto Pasamontes', strDisplay);
-        strDisplay = sprintf('%s\nWork Done in:\n     BioInstrumentation and BioMEMS Lab\n     PI: Cristina E. Davis\n     University of California, Davis', strDisplay);
+        strDisplay = sprintf('%s\nWork Done in:\n     Bioinstrumentation and BioMEMS Laboratory\n     PI: Cristina E. Davis\n     University of California, Davis', strDisplay);
         strDisplay = sprintf('%s\nLocation of Log File:\n     %s', strDisplay, strLogFile);
         strDisplay = sprintf('%s\n\nQuestions or Comments:\n     djpeirano@gmail.com', strDisplay);
         strDisplay = sprintf('%s\n\nCopyright The Regents of the University of California, Davis campus, 2014-16.  All rights reserved.', strDisplay);
-        strDisplay = sprintf('%s\n\nPublications using this software must reference:\nPeirano DJ, Pasamontes A, Davis CE*. (2016) Supervised Semi-Automated Data Analysis Software for Gas Chromatography / Differential Mobility Spectrometry (GC/DMS) Metabolomics Applications. International Journal for Ion Mobility Spectrometry (accepted, in press) DOI: 10.1007/s12127-016-0200-9', strDisplay);
+        strDisplay = sprintf('%s\n\nPublications using this software must reference:\n     Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications. International Journal for Ion Mobility Spectrometry 19(2): 155-166. DOI: 10.1007/s12127-016-0200-9', strDisplay);
         
         funcToast(strDisplay, sprintf('About %s', strSoftwareName), 'help');
     end
@@ -1283,29 +1309,6 @@ valZMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'norm
 
 panelFigureOptions = uipanel(tabVisualization, 'BackgroundColor', colorGrey,...
     'Position', [0.31 0.6 0.3 0.39]);
-
-%%%%%%%%%%%%%%%%%%%%%
-% Text for Spectra Selection
-uicontrol(panelFigureOptions, 'Style','text',...
-    'String', 'Spectra shown in Figure', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
-    'Position',[.1 .91 .8 .06 ]);
-
-%%%%%%%%%%%%%%%%%%%%%
-% Spectra Selection Dropdown
-menuSpectraSelection = uicontrol(panelFigureOptions,...
-        'Style','popupmenu',...
-        'String',{'Positive Spectra'; 'Negative Spectra';...
-            'Both (Side by Side)'; 'Both (Vertical)'},...
-        'Value', 1,...
-        'Units', 'normalized',...
-        'BackgroundColor', colorGrey,...
-        'HorizontalAlignment', 'left',...
-        'Position',[0.1 0.84 .8 0.06],...
-        'Callback', {@menuSpectraSelection_Callback});
-    function menuSpectraSelection_Callback(~,~)
-        funcRefreshPlaylist()
-    end
 
 %%%%%%%%%%%%%%%%%%%%%
 % Text for Colormap Selection
@@ -2600,6 +2603,7 @@ function funcRefreshPlaylist()
         set(textCurrFile, 'String', strTitle);
         boolEmptyPlot = false;
         
+        %%%%
         % Apply desired colormap
         strCurrColormap = get(menuColormapSelection, 'String');
         strCurrColormap...
@@ -2612,6 +2616,7 @@ function funcRefreshPlaylist()
                 matColormap = funcColorMap('plasma');
         end
         
+        %%%%
         % Apply desired scaling
         strCurrColorScaling = get(menuColorbarScaling, 'String');
         strCurrColorScaling...
