@@ -133,25 +133,11 @@ objBigWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
 objAxisMain = axes('Position',[.03,.07,.37,.88]);
 
 %%%%%%%%%%%%%%%%%%%%%
-% Spectra Selection Dropdown
-menuSpectraSelection = uicontrol(...
-        'Style','popupmenu',...
-        'String',{'Positive Spectra'; 'Negative Spectra'},...
-        'Value', 1,...
-        'Units', 'normalized',...
-        'BackgroundColor', colorGrey,...
-        'HorizontalAlignment', 'left',...
-        'Position',[0.03 0.96 .1 0.03],...
-        'Callback', {@menuSpectraSelection_Callback});
-    function menuSpectraSelection_Callback(~,~)
-        funcRefreshPlaylist()
-    end
-%%%%%%%%%%%%%%%%%%%%%
 % Current File Title
 textCurrFile = uicontrol('Style','text', 'String','[No File Selected]',...
     'Units', 'normalized', 'BackgroundColor', colorGrey,...
     'HorizontalAlignment', 'left',...
-    'Position',[.16 .96 .34 .03 ]);
+    'Position',[.03 .96 .44 .03 ]);
 
 %%%%%%%%%%%%%%%%%%%%%
 % View Raw Data Button
@@ -205,241 +191,8 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','>>',...
     end
 
 
-%%%%%%%%%%%%%%%%%%%%%
-% Panel for Ranges
-panelRange = uipanel('BackgroundColor', colorGrey,...
-    'Position', [0.405 0.58 0.1 0.32]);
-% Following values are connected and need to be corrected all at the same
-% time.
-valFieldHeight = 0.08;
-valFieldWidth = 0.4;
-valLeftStart = 0.55;
-valRightStart = 0.05;
-
-%%%%%%%%%%%%%%%%%%%%%
-% Pos/Neg Titles
-uicontrol(panelRange, 'Style','text', 'String', 'Neg', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'FontWeight', 'bold', 'Position',[valLeftStart .91 valFieldWidth .06 ]);
-
-uicontrol(panelRange, 'Style','text', 'String', 'Pos', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'FontWeight', 'bold', 'Position',[valRightStart .91 valFieldWidth .06 ]);
-
-% Pos Neg Ranges Lock Box
-uicontrol(panelRange, 'Style','text', 'String','Lock', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'Position',[.4 .93 .2 .06 ]);
-
-checkboxLockPosNegRanges = uicontrol(panelRange, 'Style','checkbox',...
-    'Visible', 'on',...
-    'Units', 'normalized', 'BackgroundColor', colorGrey,...
-    'Value', 1, 'Position',[.45 .88 .1 .05 ]);
-%%%%%%%%%%%%%%%%%%%%%
-% CV Range
-uicontrol(panelRange, 'Style','text', 'String','CV Range', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'Position',[0 .8 1 .06 ]);
-
-valCVMinPos = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.71 valFieldWidth valFieldHeight ],...
-    'Callback', {@editCVMinPos});
-    function editCVMinPos(~, ~)
-        valMax = str2double(get(valCVMaxPos, 'String'));
-        valMin = str2double(get(valCVMinPos, 'String'));
-        if valMax < valMin+5
-            set(valCVMinPos, 'String', num2str(valMax-5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valCVMinNeg, 'String', get(valCVMinPos, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-valCVMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position',[valRightStart 0.61 valFieldWidth valFieldHeight ],...
-    'Callback',{@editCVMaxPos});
-    function editCVMaxPos(~, ~)
-        valMax = str2double(get(valCVMaxPos, 'String'));
-        valMin = str2double(get(valCVMinPos, 'String'));
-        if valMax < valMin+5
-            set(valCVMaxPos, 'String', num2str(valMin+5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valCVMaxNeg, 'String', get(valCVMaxPos, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-valCVMinNeg = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.71 valFieldWidth valFieldHeight ],...
-    'Callback', {@editCVMinNeg});
-    function editCVMinNeg(~, ~)
-        valMax = str2double(get(valCVMaxNeg, 'String'));
-        valMin = str2double(get(valCVMinNeg, 'String'));
-        if valMax < valMin+5
-            set(valCVMinNeg, 'String', num2str(valMax-5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valCVMinPos, 'String', get(valCVMinNeg, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-valCVMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position',[valLeftStart 0.61 valFieldWidth valFieldHeight ],...
-    'Callback',{@editCVMaxNeg});
-    function editCVMaxNeg(~, ~)
-        valMax = str2double(get(valCVMaxNeg, 'String'));
-        valMin = str2double(get(valCVMinNeg, 'String'));
-        if valMax < valMin+5
-            set(valCVMaxNeg, 'String', num2str(valMin+5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valCVMaxPos, 'String', get(valCVMaxNeg, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-
-%%%%%%%%%%%%%%%%%%%%%
-% RT Range
-uicontrol(panelRange, 'Style','text', 'String', 'RT Range', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'Position', [0 .5 1 .06 ]);
-
-valRTMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.41 valFieldWidth valFieldHeight ],...
-    'Callback',{@editRTMinPos});
-    function editRTMinPos(~, ~)
-        valMax = str2double(get(valRTMaxPos, 'String'));
-        valMin = str2double(get(valRTMinPos, 'String'));
-        if valMax < valMin+5
-            set(valRTMinPos, 'String', num2str(valMax-5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valRTMinNeg, 'String', get(valRTMinPos, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-valRTMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.31 valFieldWidth valFieldHeight ],...
-    'Callback',{@editRTMaxPos});
-    function editRTMaxPos(~, ~)
-        valMax = str2double(get(valRTMaxPos, 'String'));
-        valMin = str2double(get(valRTMinPos, 'String'));
-        if valMax < valMin+5
-            set(valRTMaxPos, 'String', num2str(valMin+5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valRTMaxNeg, 'String', get(valRTMaxPos, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-valRTMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.41 valFieldWidth valFieldHeight ],...
-    'Callback',{@editRTMinNeg});
-    function editRTMinNeg(~, ~)
-        valMax = str2double(get(valRTMaxNeg, 'String'));
-        valMin = str2double(get(valRTMinNeg, 'String'));
-        if valMax < valMin+5
-            set(valRTMinNeg, 'String', num2str(valMax-5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valRTMinPos, 'String', get(valRTMinNeg, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-valRTMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.31 valFieldWidth valFieldHeight ],...
-    'Callback',{@editRTMaxNeg});
-    function editRTMaxNeg(~, ~)
-        valMax = str2double(get(valRTMaxNeg, 'String'));
-        valMin = str2double(get(valRTMinNeg, 'String'));
-        if valMax < valMin+5
-            set(valRTMaxNeg, 'String', num2str(valMin+5));
-        end
-        
-        if get(checkboxLockPosNegRanges, 'Value') == 1
-            set(valRTMaxPos, 'String', get(valRTMaxNeg, 'String'));
-        end
-        
-        funcRefreshPlaylist;
-    end
-
-%%%%%%%%%%%%%%%%%%%%%
-% Z Range
-uicontrol(panelRange, 'Style','text', 'String','Z Range', 'Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
-    'Position',[0 .2 1 .06 ]);
-
-valZMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.11 valFieldWidth valFieldHeight ],...
-    'Callback',{@editZMinPos});
-    function editZMinPos(~, ~)
-        valMax = str2double(get(valZMaxPos, 'String'));
-        valMin = str2double(get(valZMinPos, 'String'));
-        if valMax < valMin+.001
-            set(valZMinPos, 'String', num2str(valMax-.001));
-        end
-        funcRefreshPlaylist;
-    end
-
-valZMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.01 valFieldWidth valFieldHeight ],...
-    'Callback',{@editZMaxPos});
-    function editZMaxPos(~, ~)
-        valMax = str2double(get(valZMaxPos, 'String'));
-        valMin = str2double(get(valZMinPos, 'String'));
-        if valMax < valMin+.001
-            set(valZMaxPos, 'String', num2str(valMin+.001));
-        end
-        funcRefreshPlaylist;
-    end
-
-valZMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.11 valFieldWidth valFieldHeight ],...
-    'Callback',{@editZMinNeg});
-    function editZMinNeg(~, ~)
-        valMax = str2double(get(valZMaxNeg, 'String'));
-        valMin = str2double(get(valZMinNeg, 'String'));
-        if valMax < valMin+.001
-            set(valZMinNeg, 'String', num2str(valMax-.001));
-        end
-        funcRefreshPlaylist;
-    end
-
-valZMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.01 valFieldWidth valFieldHeight ],...
-    'Callback',{@editZMaxNeg});
-    function editZMaxNeg(~, ~)
-        valMax = str2double(get(valZMaxNeg, 'String'));
-        valMin = str2double(get(valZMinNeg, 'String'));
-        if valMax < valMin+.001
-            set(valZMaxNeg, 'String', num2str(valMin+.001));
-        end
-        funcRefreshPlaylist;
-    end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Lower Buttons (Will be moved anon)
+% Lower Buttons 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%
@@ -447,7 +200,7 @@ valZMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'norm
 checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
     'Visible', 'on',...
     'Units', 'normalized', 'BackgroundColor', colorGrey,...
-    'Value', 1, 'Position', [.41 .54 .01 .02 ],...
+    'Value', 1, 'Position', [.41 .87 .01 .02 ],...
     'Callback', {@checkboxIncludeNegativeAnalysis_Callback});
     function checkboxIncludeNegativeAnalysis_Callback(~,~)
         
@@ -496,7 +249,7 @@ checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
 uicontrol('Style','text', 'String','Include Negative Spectra in Analysis',...
     'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
-    'Position',[.425 .51 .075 .06 ]);
+    'Position',[.425 .81 .075 .09 ]);
 
 %%%%%%%%%%%%%%%%%%%%%
 % Pre-Processing List
@@ -686,6 +439,7 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','About',...
 tabGroupMain = uitabgroup('Units', 'normalized',...
     'BackgroundColor', colorGrey, 'Position', [0.51 0.01 0.48 0.96]);
 tabSamples = uitab(tabGroupMain, 'Title', 'Samples');
+tabVisualization = uitab(tabGroupMain, 'Title', 'Visualization');
 tabPreprocessing = uitab(tabGroupMain, 'Title', 'Preprocessing');
 tabSupervisedAnalysis = uitab(tabGroupMain, 'Title', 'Supervised Analysis');
 % tabVisualizationTools = uitab(tabGroupMain, 'Title', 'Visualization Tools');
@@ -1286,7 +1040,316 @@ buttAddCategory = uicontrol(tabSamples, 'Style','pushbutton',...
     end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Visualization Tab
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%
+% Panel for Ranges
+panelRange = uipanel(tabVisualization, 'BackgroundColor', colorGrey,...
+    'Position', [0 0.6 0.3 0.39]);
+% Following values are connected and need to be corrected all at the same
+% time.
+valFieldHeight = 0.08;
+valFieldWidth = 0.4;
+valLeftStart = 0.55;
+valRightStart = 0.05;
+
+%%%%%%%%%%%%%%%%%%%%%
+% Pos/Neg Titles
+uicontrol(panelRange, 'Style','text', 'String', 'Neg', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'FontWeight', 'bold', 'Position',[valLeftStart .91 valFieldWidth .06 ]);
+
+uicontrol(panelRange, 'Style','text', 'String', 'Pos', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'FontWeight', 'bold', 'Position',[valRightStart .91 valFieldWidth .06 ]);
+
+% Pos Neg Ranges Lock Box
+uicontrol(panelRange, 'Style','text', 'String','Lock', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position',[.4 .93 .2 .06 ]);
+
+checkboxLockPosNegRanges = uicontrol(panelRange, 'Style','checkbox',...
+    'Visible', 'on',...
+    'Units', 'normalized', 'BackgroundColor', colorGrey,...
+    'Value', 1, 'Position',[.45 .88 .1 .05 ]);
+%%%%%%%%%%%%%%%%%%%%%
+% CV Range
+uicontrol(panelRange, 'Style','text', 'String','CV Range', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position',[0 .8 1 .06 ]);
+
+valCVMinPos = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.71 valFieldWidth valFieldHeight ],...
+    'Callback', {@editCVMinPos});
+    function editCVMinPos(~, ~)
+        valMax = str2double(get(valCVMaxPos, 'String'));
+        valMin = str2double(get(valCVMinPos, 'String'));
+        if valMax < valMin+5
+            set(valCVMinPos, 'String', num2str(valMax-5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMinNeg, 'String', get(valCVMinPos, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+valCVMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position',[valRightStart 0.61 valFieldWidth valFieldHeight ],...
+    'Callback',{@editCVMaxPos});
+    function editCVMaxPos(~, ~)
+        valMax = str2double(get(valCVMaxPos, 'String'));
+        valMin = str2double(get(valCVMinPos, 'String'));
+        if valMax < valMin+5
+            set(valCVMaxPos, 'String', num2str(valMin+5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMaxNeg, 'String', get(valCVMaxPos, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+valCVMinNeg = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.71 valFieldWidth valFieldHeight ],...
+    'Callback', {@editCVMinNeg});
+    function editCVMinNeg(~, ~)
+        valMax = str2double(get(valCVMaxNeg, 'String'));
+        valMin = str2double(get(valCVMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valCVMinNeg, 'String', num2str(valMax-5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMinPos, 'String', get(valCVMinNeg, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+valCVMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 20, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position',[valLeftStart 0.61 valFieldWidth valFieldHeight ],...
+    'Callback',{@editCVMaxNeg});
+    function editCVMaxNeg(~, ~)
+        valMax = str2double(get(valCVMaxNeg, 'String'));
+        valMin = str2double(get(valCVMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valCVMaxNeg, 'String', num2str(valMin+5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valCVMaxPos, 'String', get(valCVMaxNeg, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+
+%%%%%%%%%%%%%%%%%%%%%
+% RT Range
+uicontrol(panelRange, 'Style','text', 'String', 'RT Range', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position', [0 .5 1 .06 ]);
+
+valRTMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.41 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMinPos});
+    function editRTMinPos(~, ~)
+        valMax = str2double(get(valRTMaxPos, 'String'));
+        valMin = str2double(get(valRTMinPos, 'String'));
+        if valMax < valMin+5
+            set(valRTMinPos, 'String', num2str(valMax-5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMinNeg, 'String', get(valRTMinPos, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+valRTMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.31 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMaxPos});
+    function editRTMaxPos(~, ~)
+        valMax = str2double(get(valRTMaxPos, 'String'));
+        valMin = str2double(get(valRTMinPos, 'String'));
+        if valMax < valMin+5
+            set(valRTMaxPos, 'String', num2str(valMin+5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMaxNeg, 'String', get(valRTMaxPos, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+valRTMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.41 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMinNeg});
+    function editRTMinNeg(~, ~)
+        valMax = str2double(get(valRTMaxNeg, 'String'));
+        valMin = str2double(get(valRTMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valRTMinNeg, 'String', num2str(valMax-5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMinPos, 'String', get(valRTMinNeg, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+valRTMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 800, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.31 valFieldWidth valFieldHeight ],...
+    'Callback',{@editRTMaxNeg});
+    function editRTMaxNeg(~, ~)
+        valMax = str2double(get(valRTMaxNeg, 'String'));
+        valMin = str2double(get(valRTMinNeg, 'String'));
+        if valMax < valMin+5
+            set(valRTMaxNeg, 'String', num2str(valMin+5));
+        end
+        
+        if get(checkboxLockPosNegRanges, 'Value') == 1
+            set(valRTMaxPos, 'String', get(valRTMaxNeg, 'String'));
+        end
+        
+        funcRefreshPlaylist;
+    end
+
+%%%%%%%%%%%%%%%%%%%%%
+% Z Range
+uicontrol(panelRange, 'Style','text', 'String','Z Range', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'center',...
+    'Position',[0 .2 1 .06 ]);
+
+valZMinPos = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.11 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMinPos});
+    function editZMinPos(~, ~)
+        valMax = str2double(get(valZMaxPos, 'String'));
+        valMin = str2double(get(valZMinPos, 'String'));
+        if valMax < valMin+.001
+            set(valZMinPos, 'String', num2str(valMax-.001));
+        end
+        funcRefreshPlaylist;
+    end
+
+valZMaxPos = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valRightStart 0.01 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMaxPos});
+    function editZMaxPos(~, ~)
+        valMax = str2double(get(valZMaxPos, 'String'));
+        valMin = str2double(get(valZMinPos, 'String'));
+        if valMax < valMin+.001
+            set(valZMaxPos, 'String', num2str(valMin+.001));
+        end
+        funcRefreshPlaylist;
+    end
+
+valZMinNeg = uicontrol(panelRange, 'Style','edit', 'String', 0, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.11 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMinNeg});
+    function editZMinNeg(~, ~)
+        valMax = str2double(get(valZMaxNeg, 'String'));
+        valMin = str2double(get(valZMinNeg, 'String'));
+        if valMax < valMin+.001
+            set(valZMinNeg, 'String', num2str(valMax-.001));
+        end
+        funcRefreshPlaylist;
+    end
+
+valZMaxNeg = uicontrol(panelRange, 'Style','edit', 'String', 0.5, 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position', [valLeftStart 0.01 valFieldWidth valFieldHeight ],...
+    'Callback',{@editZMaxNeg});
+    function editZMaxNeg(~, ~)
+        valMax = str2double(get(valZMaxNeg, 'String'));
+        valMin = str2double(get(valZMinNeg, 'String'));
+        if valMax < valMin+.001
+            set(valZMaxNeg, 'String', num2str(valMin+.001));
+        end
+        funcRefreshPlaylist;
+    end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Figure Tools
+
+panelFigureOptions = uipanel(tabVisualization, 'BackgroundColor', colorGrey,...
+    'Position', [0.31 0.6 0.3 0.39]);
+
+%%%%%%%%%%%%%%%%%%%%%
+% Text for Spectra Selection
+uicontrol(panelFigureOptions, 'Style','text',...
+    'String', 'Spectra shown in Figure', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
+    'Position',[.1 .91 .8 .06 ]);
+
+%%%%%%%%%%%%%%%%%%%%%
+% Spectra Selection Dropdown
+menuSpectraSelection = uicontrol(panelFigureOptions,...
+        'Style','popupmenu',...
+        'String',{'Positive Spectra'; 'Negative Spectra';...
+            'Both (Side by Side)'; 'Both (Vertical)'},...
+        'Value', 1,...
+        'Units', 'normalized',...
+        'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left',...
+        'Position',[0.1 0.84 .8 0.06],...
+        'Callback', {@menuSpectraSelection_Callback});
+    function menuSpectraSelection_Callback(~,~)
+        funcRefreshPlaylist()
+    end
+
+%%%%%%%%%%%%%%%%%%%%%
+% Text for Colormap Selection
+uicontrol(panelFigureOptions, 'Style','text',...
+    'String', 'Colormap Selection', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
+    'Position',[.1 .68 .8 .06 ]);
+
+%%%%%%%%%%%%%%%%%%%%%
+% Colormap Selection Dropdown
+menuColormapSelection = uicontrol(panelFigureOptions,...
+        'Style','popupmenu',...
+        'String',{'Jet'; 'Plasma'},...
+        'Value', 1,...
+        'Units', 'normalized',...
+        'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left',...
+        'Position',[0.1 0.61 .8 0.06],...
+        'Callback', {@menuColormapSelection_Callback});
+    function menuColormapSelection_Callback(~,~)
+        funcRefreshPlaylist()
+    end
+
+%%%%%%%%%%%%%%%%%%%%%
+% Text for Colorbar Scaling Selection
+uicontrol(panelFigureOptions, 'Style','text',...
+    'String', 'Colorbar Scaling', 'Units', 'normalized',...
+    'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
+    'Position',[.1 .45 .8 .06 ]);
+
+%%%%%%%%%%%%%%%%%%%%%
+% Colorbar Scaling Dropdown
+menuColorbarScaling = uicontrol(panelFigureOptions,...
+        'Style','popupmenu',...
+        'String',{'Linear'; 'Exponential'; 'Density (Non-Constant)'},...
+        'Value', 1,...
+        'Units', 'normalized',...
+        'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left',...
+        'Position',[0.1 0.38 .8 0.06],...
+        'Callback', {@menuColorbarScaling_Callback});
+    function menuColorbarScaling_Callback(~,~)
+        funcRefreshPlaylist()
+    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing Tab
@@ -2536,11 +2599,84 @@ function funcRefreshPlaylist()
         caxis([valMinZ, valMaxZ]);
         set(textCurrFile, 'String', strTitle);
         boolEmptyPlot = false;
-    % 20160721 Commented out in preparation for accessing options.inf and
-    % keeping strCommonFolder more "sticky".
-%     else
-%         strCommonFolder = '';
-%         set(textCommonFolder, 'String', strCommonFolder);
+        
+        % Apply desired colormap
+        strCurrColormap = get(menuColormapSelection, 'String');
+        strCurrColormap...
+            = strCurrColormap{get(menuColormapSelection, 'Value')};
+        
+        switch strCurrColormap
+            case 'Jet'
+                matColormap = colormap('jet');
+            case 'Plasma'
+                matColormap = funcColorMap('plasma');
+        end
+        
+        % Apply desired scaling
+        strCurrColorScaling = get(menuColorbarScaling, 'String');
+        strCurrColorScaling...
+            = strCurrColorScaling{get(menuColorbarScaling, 'Value')};
+        
+        switch strCurrColorScaling
+            case 'Linear'
+                % Do Nothing
+                colormap(matColormap);
+            case 'Exponential'
+                % Create an exponential vector from min = 1 to max =
+                % length(map).  
+                
+                numEntries = size(matColormap,1);
+                valInc = numEntries^(1/numEntries);
+                vecCipher = log(1:numEntries)/log(valInc);
+                vecCipher(1) = 1;
+                matColormap = interp1((1:numEntries)', matColormap,...
+                    vecCipher, 'pchip');
+                colormap(matColormap);
+            case 'Density (Non-Constant)'
+                numEntries = size(matColormap,1);
+                vecData = currData{3};
+                vecData = sort(vecData(:));
+                
+                vecBase = linspace(vecData(1), vecData(end), numEntries);
+                vecIndx = linspace(1, length(vecData), numEntries);
+                vecBaseVals = interp1((1:length(vecData)), vecData, vecIndx,...
+                    'pchip');
+                
+                % To address that vecVals must be monotonically increasing:
+                % 1) Identify the smallest non-zero delta and define a
+                % trivial delta that is 1/100 * that delta/length(vecData)
+                % 2) Set all zero changes to that trivial delta and
+                % calculate the cumulative sum of those deltas. Set the
+                % cumulative sum vector to zero where the true delta was
+                % not equal to zero, and then add that cumulative sum
+                % vector to the original data to ensure non-zero positive
+                % changes at all locations while having very little true
+                % impact.  (end value should be equal to original end value
+                % and largest difference should less than 1/100 * true
+                % smallest non-zero delta)
+                vecDiff = diff(vecBaseVals);
+                vecBoolZero = logical(vecDiff==0);
+                valMinDelta = min(vecDiff(~vecBoolZero));
+                valTrivialDelta = valMinDelta / length(vecData) / 100;
+                
+                vecFakeDiff = zeros(size(vecBoolZero));
+                vecFakeDiff(vecBoolZero) = valTrivialDelta;
+                vecCumSum = cumsum(vecFakeDiff);
+                vecCumSum(~vecBoolZero) = 0;
+                
+                vecVals = vecBaseVals;
+                vecVals(2:end) = vecVals(2:end) + vecCumSum;
+                
+                matColormap = interp1(vecVals, matColormap, vecBase);
+                
+%                 
+%                 assignin('base', 'vecVals', vecVals);
+%                 assignin('base', 'vecBaseVals', vecBaseVals);
+                
+                
+                colormap(matColormap);
+                caxis([vecData(1), vecData(end)]);  %Needs to be executed after colormap call
+        end
     end
     
     set(objTableMain, 'data', cellPlaylist);
