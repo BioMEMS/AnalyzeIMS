@@ -68,7 +68,7 @@ currFigure = 1;
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
 
-strSoftwareName = 'AIMS, Version 1.25';
+strSoftwareName = 'AIMS, Version 1.30';
 
 ptrPreviousToast = -1;
 
@@ -2585,6 +2585,16 @@ function funcRefreshPlaylist()
         valZOffsetNeg = str2double(get(valZMaxNeg, 'String'))...
             - str2double(get(valZMinNeg, 'String'));
         
+
+%         buttColorbar = findall(gcf, 'tag', 'Colorbar')
+        objFig = findall(gcf);
+        objColorbar = findall(objFig, 'tag', 'Colorbar');
+        boolColorbar = false;
+        if ~isempty(objColorbar)
+            boolColorbar = true;
+        end
+        
+        
         if boolEmptyPlot
             surf(currData{1}, currData{2}, currData{3});
         else
@@ -2682,7 +2692,13 @@ function funcRefreshPlaylist()
                 colormap(matColormap);
                 caxis([vecData(1), vecData(end)]);  %Needs to be executed after colormap call
         end
+        
+        if boolColorbar
+            colorbar;
+        end
     end
+    
+
     
     set(objTableMain, 'data', cellPlaylist);
 end
