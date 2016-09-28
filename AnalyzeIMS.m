@@ -89,7 +89,16 @@ strAddNewClassification = 'Add New Classification';
 strNewClassification = '';      
     %Variable to be able to pass between the new window with classification
     %name 
+    
+% Sample Scanner Variables
+boolResizeSampleScannerTab = true;
+numSlotsToDisplay = 3;
+dirSlotsToDisplay = 0;
+dirRowsToScroll = 0;
+vecSSPanelPointers = zeros(0,1);
+numFirstSSSample = 1;
 
+boolKeepStaticSampleScanner = 0;
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Draw Objects
@@ -179,6 +188,7 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','<<',...
     'Position',[.425 .91 .025 .05], 'BackgroundColor', colorGrey,...
     'Callback',{@buttPreviousSample_Callback});
     function buttPreviousSample_Callback(~,~)
+        boolKeepStaticSampleScanner = 1;
         funcChangeSample(-1);
     end
 
@@ -187,6 +197,7 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','>>',...
     'Position',[.46 .91 .025 .05], 'BackgroundColor', colorGrey,...
     'Callback',{@buttNextSample_Callback});
     function buttNextSample_Callback(~,~)
+        boolKeepStaticSampleScanner = 1;
         funcChangeSample(+1);
     end
 
@@ -219,6 +230,7 @@ checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
                 return
             end
             set(menuSpectraSelection, 'Visible', 'on');
+            set(textSpectraShown, 'Visible', 'on');
             set(valCVMinNeg, 'Visible', 'on');
             set(valCVMaxNeg, 'Visible', 'on');
             set(valRTMinNeg, 'Visible', 'on');
@@ -237,6 +249,7 @@ checkboxIncludeNegativeAnalysis = uicontrol('Style','checkbox',...
             'Positive Spectra')))
 
         set(menuSpectraSelection, 'Visible', 'off');
+        set(textSpectraShown, 'Visible', 'off');
         set(valCVMinNeg, 'Visible', 'off');
         set(valCVMaxNeg, 'Visible', 'off');
         set(valRTMinNeg, 'Visible', 'off');
@@ -253,7 +266,7 @@ uicontrol('Style','text', 'String','Include Negative Spectra in Analysis',...
 
 %%%%%%%%%%%%%%%%%%%%%
 % Text for Spectra Selection
-uicontrol('Style','text',...
+textSpectraShown = uicontrol('Style','text',...
     'String', 'Spectra Shown', 'Units', 'normalized',...
     'BackgroundColor', colorGrey, 'HorizontalAlignment', 'left',...
     'Position', [.425 .77 .075 .03 ]);
@@ -410,7 +423,7 @@ buttDumpVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normali
     'Position',[.41 0.09 .09 .03], 'BackgroundColor', colorGrey,...
     'Callback',{@buttDumpVariablesToWorkspace_Callback}); %#ok<NASGU>
     function buttDumpVariablesToWorkspace_Callback(~,~)
-        vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
+%         vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
         numBaseCol = length(cellColNames);
         cellCategories = get(objTableMain, 'ColumnName');
         if get(buttBoolLeaveOneOut, 'Value')
@@ -419,9 +432,12 @@ buttDumpVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normali
             valModelType = str2double(get(valNumModels, 'String'));
         end
         
-        assignin('base', 'cellPlaylist', cellPlaylist(vecUsed,:));
-        assignin('base', 'cellData', cellData(vecUsed,:));
-        assignin('base', 'cellRawData', cellRawData(vecUsed,:));
+        assignin('base', 'cellPlaylist', cellPlaylist);
+        assignin('base', 'cellData', cellData);
+        assignin('base', 'cellRawData', cellRawData);
+%         assignin('base', 'cellPlaylist', cellPlaylist(vecUsed,:));
+%         assignin('base', 'cellData', cellData(vecUsed,:));
+%         assignin('base', 'cellRawData', cellRawData(vecUsed,:));
         assignin('base', 'valRTMinPos', str2double(get(valRTMinPos, 'String')) );
         assignin('base', 'valRTMaxPos', str2double(get(valRTMaxPos, 'String')) );
         assignin('base', 'valCVMinPos', str2double(get(valCVMinPos, 'String')) );
@@ -431,7 +447,8 @@ buttDumpVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normali
         assignin('base', 'valCVMinNeg', str2double(get(valCVMinNeg, 'String')) );
         assignin('base', 'valCVMaxNeg', str2double(get(valCVMaxNeg, 'String')) );
         assignin('base', 'cellCategories', cellCategories( numBaseCol+1:end));
-        assignin('base', 'cellClassifications', cellPlaylist(vecUsed, numBaseCol+1:end));
+        assignin('base', 'cellClassifications', cellPlaylist(:, numBaseCol+1:end));
+%         assignin('base', 'cellClassifications', cellPlaylist(vecUsed, numBaseCol+1:end));
         assignin('base', 'strBlank', strBlank);
         assignin('base', 'numLV', str2double(get(valNumLV, 'String')));
         assignin('base', 'valModelType', valModelType);
@@ -463,23 +480,31 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','About',...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tabGroupMain = uitabgroup('Units', 'normalized',...
-    'BackgroundColor', colorGrey, 'Position', [0.51 0.01 0.48 0.96]);
+    'BackgroundColor', colorGrey, 'Position', [0.51 0.01 0.48 0.96],...
+    'ResizeFcn', {@funcResizeTabGroup},...
+    'SelectionChangeCallback', {@funcSelectionChangeTabGroup});
+    function funcResizeTabGroup(~,~)
+        % This function is called whenever the uitabgroup has its size
+        % modified, so will have to address all resizing.
+        boolResizeSampleScannerTab = true;
+        funcTabSampleScanner;
+    end
+
+    function funcSelectionChangeTabGroup(~,~)
+        funcTabSampleScanner;
+    end
+
 tabSamples = uitab(tabGroupMain, 'Title', 'Samples');
 tabVisualization = uitab(tabGroupMain, 'Title', 'Visualization');
 tabPreprocessing = uitab(tabGroupMain, 'Title', 'Preprocessing');
-tabSupervisedAnalysis = uitab(tabGroupMain, 'Title', 'Supervised Analysis');
-% tabVisualizationTools = uitab(tabGroupMain, 'Title', 'Visualization Tools');
+tabModel = uitab(tabGroupMain, 'Title', 'Model');
+tabPrediction = uitab(tabGroupMain, 'Title', 'Prediction');
+tabSampleScanner = uitab(tabGroupMain, 'Title', 'Sample Scanner');
 
-tabGroupSupervisedAnalysis = uitabgroup(tabSupervisedAnalysis,...
-    'Units', 'normalized', 'BackgroundColor', colorGrey,...
-    'Position', [0.01 0.01 0.98 0.98]);
-tabModel = uitab(tabGroupSupervisedAnalysis, 'Title', 'Model');
-tabPrediction = uitab(tabGroupSupervisedAnalysis, 'Title', 'Prediction');
+%%%%%%
 
-% tabGroupVisualizationTools = uitabgroup(tabVisualizationTools,...
-%     'Units', 'normalized', 'BackgroundColor', colorGrey,...
-%     'Position', [0.01 0.01 0.98 0.98]);
-% tabImageScanner = uitab(tabGroupVisualizationTools, 'Title', 'Image Scanner');
+%%%%%%
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -505,6 +530,8 @@ uicontrol(tabSamples, 'Style','pushbutton', 'Units', 'normalized', 'String','Cle
 
 %         strCommonFolder = '';   
         boolAxisRangesSet = false;
+        numSlotsToDisplay = 3;
+        dirSlotsToDisplay = 0;
 
         funcRefreshPlaylist;
     end
@@ -2145,6 +2172,505 @@ panelPredictionClassificationInfo = uipanel(tabPrediction,...
 
         end
     
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Sample Scanner Tab
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    function funcTabSampleScanner(~,~)     
+        for i = 1:length(vecSSPanelPointers)
+            delete(vecSSPanelPointers(i))
+        end
+        vecSSPanelPointers = zeros(0,1);
+        
+        % Dealing with Sample Scanner Tab
+        if ~exist('tabSampleScanner', 'var')...
+                || get(tabGroupMain, 'SelectedTab') ~= tabSampleScanner
+            %During the initial "resize" it hasn't been initialized yet.
+            return
+        end
+        
+        % Values in Pixels for setting up the slots to display the figures.
+        valSizeMargin = 1;
+        valSizeCaption = 20;
+        valSizeCheckboxWidth = 20;
+        valSizeHeader = 60;
+        valSizeTabHeight = 10;
+        
+        % Need Bottom panel calculated for spacing slots later.
+        set(tabGroupMain, 'Units', 'pixels')
+        sizeTabGroup = get(tabGroupMain, 'Position');
+        set(tabGroupMain, 'Units', 'normalized')
+        
+        
+        if boolResizeSampleScannerTab
+            vecSizeTopPanel = [0 ...
+                (sizeTabGroup(4)-valSizeHeader-valSizeTabHeight+sizeTabGroup(2))...
+                    /sizeTabGroup(4)...
+                1 valSizeHeader/sizeTabGroup(4)];
+            set(panelSampleScannerControls, 'Position',...
+                vecSizeTopPanel);
+            vecSizeBottomPanel = [0 0 ...
+                1 ...
+                (sizeTabGroup(4)-valSizeHeader-valSizeTabHeight-valSizeMargin+sizeTabGroup(2))...
+                    /sizeTabGroup(4)];
+            set(panelSampleScannerDisplay, 'Position',...
+                vecSizeBottomPanel);
+            
+            boolResizeSampleScannerTab = false;
+        end
+        
+        if boolEmptyPlot
+            return
+        end
+        
+        % Clear out previous panels and identify samples that will be used
+
+        
+        if get(checkboxIncludeAllImages, 'Value') == 0
+            vecBoolCheckboxes = cellfun(@(x) x, cellPlaylist(:,1));
+            numTotalAvailableSamples = sum(vecBoolCheckboxes);
+            vecNumbers = find(logical(vecBoolCheckboxes));
+        else
+            numTotalAvailableSamples = size(cellPlaylist,1);
+            vecNumbers = (1:numTotalAvailableSamples)';
+        end
+        
+        % Make sure the range we're drawing is inside the current settings
+        % of the plot
+        vecRangeMainX = get(objAxisMain, 'XLim');
+        vecRangeMainY = get(objAxisMain, 'YLim');
+        
+        if vecRangeMainX(1) > str2double(get(valCVSampleScannerMin, 'String'))
+            set(valCVSampleScannerMin, 'String', num2str(vecRangeMainX(1)));
+        end
+        if vecRangeMainX(2) < str2double(get(valCVSampleScannerMax, 'String'))
+            set(valCVSampleScannerMax, 'String', num2str(vecRangeMainX(2)));
+        end
+        if vecRangeMainY(1) > str2double(get(valRTSampleScannerMin, 'String'))
+            set(valRTSampleScannerMin, 'String', num2str(vecRangeMainY(1)));
+        end
+        if vecRangeMainY(2) < str2double(get(valRTSampleScannerMax, 'String'))
+            set(valRTSampleScannerMax, 'String', num2str(vecRangeMainY(2)));
+        end
+        
+        valCVLow = str2double(get(valCVSampleScannerMin, 'String'));
+        valCVHigh = str2double(get(valCVSampleScannerMax, 'String'));
+        valRTLow = str2double(get(valRTSampleScannerMin, 'String'));
+        valRTHigh = str2double(get(valRTSampleScannerMax, 'String'));
+       
+        
+        % Identify location of current plot and then ratio to properly
+        % scale for images to show in Scanner.
+        
+        set(objAxisMain, 'Units', 'pixels')
+        vecLocationMain = get(objAxisMain, 'Position');
+        set(objAxisMain, 'Units', 'normalized')
+        
+        valBasePixelsCV = (valCVHigh-valCVLow) / diff(vecRangeMainX)...
+            * vecLocationMain(3);
+        valBasePixelsRT = (valRTHigh-valRTLow) / diff(vecRangeMainY)...
+            * vecLocationMain(4);
+        
+        
+        % The following is to identify the correct value based on a
+        % currently assigned number of plots.  At a later point, we'll
+        % identify if we would prefer less than the number or greater than
+        % the number for scaling.
+        
+        % Variables
+        % y and x  - Define the pixels on the side of each figure.
+        % z - size in pixels of stuff underneath each figure in each slot.
+        % H and W - Height and width of the area the slots are in.
+        % r - the ratio of y and x based on the scaled area from main plot.
+        % N - Targeted number of slots in area
+
+        valR = valBasePixelsRT / valBasePixelsCV;
+        valH = sizeTabGroup(4)-valSizeHeader-valSizeTabHeight-valSizeMargin;
+        valW = sizeTabGroup(3);
+        
+        numWide = 0;
+        numTall = 0;
+        
+        % Don't need to increase if already maxed out.
+        if numSlotsToDisplay >= numTotalAvailableSamples...
+                && dirSlotsToDisplay == 1
+            dirSlotsToDisplay = 0;
+        end
+        
+        % In case a bunch got unselected or whatnot...
+        if numSlotsToDisplay > numTotalAvailableSamples
+            numSlotsToDisplay = numTotalAvailableSamples;
+        end
+        
+        boolCalcBasedOnWidth = 1;
+        numSlotsToDisplay = numSlotsToDisplay + dirSlotsToDisplay;
+        if numSlotsToDisplay == 0
+            numSlotsToDisplay = 1;
+            dirSlotsToDisplay = 0;
+        end
+        
+        while numWide*numTall < numSlotsToDisplay
+            
+            numOldWide = numWide;
+            numOldTall = numTall;
+            boolOldCalcBasedOnWidth = boolCalcBasedOnWidth;
+            
+            % Increase Width by 1
+            valX = valW/(numWide+1);
+            valYSlot = (valX-valSizeMargin)*valR+valSizeCaption;
+            numPossibleTall = floor(valH/valYSlot);
+            
+            % Increase Height by 1
+            valYSlot = valH/(numTall+1);
+            valX = (valYSlot-valSizeCaption-valSizeMargin)/valR;
+            numPossibleWide = floor(valW/valX);
+            
+            if (numWide+1)*numPossibleTall < (numTall+1)*numPossibleWide
+                numWide = numWide+1;
+                numTall = numPossibleTall;
+                boolCalcBasedOnWidth = true;
+            else
+                numWide = numPossibleWide;
+                numTall = numTall+1;
+                boolCalcBasedOnWidth = false;
+            end
+            
+        end
+        
+        % Square away slots if "zooming in"
+        if dirSlotsToDisplay == -1 && numWide*numTall > numSlotsToDisplay...
+                && numOldWide*numOldTall > 0
+            numWide = numOldWide;
+            numTall = numOldTall;
+            boolCalcBasedOnWidth = boolOldCalcBasedOnWidth;
+        end
+        numSlotsToDisplay = numWide*numTall;
+        dirSlotsToDisplay = 0;
+        
+        % Identify slot sizes and locations
+        if boolCalcBasedOnWidth
+            valX = valW/numWide-valSizeMargin;
+            valYSlot = valX*valR+valSizeCaption;
+            valXOffset = 0;
+            valYOffset = (valH - (valYSlot+valSizeMargin)*numTall)/2;
+        else
+            valYSlot = valH/numTall-valSizeMargin;
+            valX = (valYSlot-valSizeCaption)/valR;
+            valXOffset = (valW - (valX+valSizeMargin)*numWide)/2;
+            valYOffset = 0;
+        end
+        
+        vecSSPanelPointers = zeros(numSlotsToDisplay,1);
+        numCurrSlot = 0;
+        for j = 1:numTall
+            for i=0:numWide-1
+                numCurrSlot = numCurrSlot + 1;
+                vecLocCurr = [(valXOffset + i*(valX+1))/valW,...
+                    (valH - valYOffset - j*(valYSlot+1) + 1)/ valH,...
+                    valX/valW, valYSlot/valH];
+                vecSSPanelPointers(numCurrSlot)...
+                    = uipanel(panelSampleScannerDisplay,...
+                    'BackgroundColor', colorGrey,...
+                    'Position', vecLocCurr);
+            end
+        end
+        
+        % Make sure that our First Sample makes sense.  (I thought of doing
+        % all kinds of things like ensuring it was aligned based on the
+        % length of the rows so that if you scroll back it goes smoothly,
+        % but I think that would annoy the user to move the first sample,
+        % so only modification if if the move pushes it to less than 1,
+        % then set to 1.
+        if dirRowsToScroll ~= 0
+            numFirstSSSample = numFirstSSSample + dirRowsToScroll * numWide;
+            dirRowsToScroll = 0;
+        end
+        
+        if numFirstSSSample < 1 || numFirstSSSample > numTotalAvailableSamples
+            numFirstSSSample = 1;
+        end
+        display(numFirstSSSample)
+        
+        cellAbbrev = funcAbbreviateNames(cellPlaylist(:,2), 3, '.');
+        
+        numCurrSample = numFirstSSSample;
+        valVerticalLine = valSizeCaption / valYSlot;
+        valHorizontalLine = valSizeCheckboxWidth / valX;
+        for i=1:length(vecSSPanelPointers)
+            if numCurrSample > numTotalAvailableSamples
+                break
+            end
+            
+            strTitle = sprintf('%d)%s', vecNumbers(numCurrSample),...
+                cellAbbrev{vecNumbers(numCurrSample)});
+            
+            
+            uicontrol(vecSSPanelPointers(i), 'Style','text',...
+                'String', strTitle,...
+                'Units', 'normalized', 'BackgroundColor', colorGrey,...
+                'HorizontalAlignment', 'left',...
+                'Position',[valHorizontalLine 0 ...
+                1-valHorizontalLine-valSizeMargin/valX valVerticalLine ]);
+            
+            uicontrol(vecSSPanelPointers(i),...
+                'Style', 'checkbox',...
+                'Visible', 'on',...
+                'Units', 'normalized', 'BackgroundColor', colorGrey,...
+                'Value', cellPlaylist{vecNumbers(numCurrSample),1},...
+                'Position', [valSizeMargin/valX, 0, ...
+                valHorizontalLine - valSizeMargin/valX, valVerticalLine ],...
+                'Callback', {@checkboxSlot_Callback, vecNumbers(numCurrSample)});
+            
+            axes('Position', [0,valVerticalLine,1,1-valVerticalLine],...
+                'Parent', vecSSPanelPointers(i));
+            
+            boolRawData = get(buttonToggleButton, 'value');
+        
+            if boolRawData
+                currData = cellRawData(vecNumbers(numCurrSample),:);
+            else
+                currData = cellData(vecNumbers(numCurrSample),:);
+            end
+
+
+            strCurrSpectra = get(menuSpectraSelection, 'String');
+            strCurrSpectra = strCurrSpectra{get(menuSpectraSelection, 'Value')};
+
+            if strcmp(strCurrSpectra, 'Positive Spectra')
+                valMinZ = str2double(get(valZMinPos, 'String'));
+                valMaxZ = str2double(get(valZMaxPos, 'String'));
+            elseif strcmp(strCurrSpectra, 'Negative Spectra')
+                valMinZ = str2double(get(valZMinNeg, 'String'));
+                valMaxZ = str2double(get(valZMaxNeg, 'String'));
+
+                currData{3} = currData{4};
+            end
+            
+            valMinCV = str2double(get(valCVSampleScannerMin, 'String'));
+            valMaxCV = str2double(get(valCVSampleScannerMax, 'String'));
+            valMinRT = str2double(get(valRTSampleScannerMin, 'String'));
+            valMaxRT = str2double(get(valRTSampleScannerMax, 'String'));
+            
+            indxMinCV = find(currData{1}>valMinCV, 1, 'first');
+            indxMaxCV = find(currData{1}<valMaxCV, 1, 'last');
+            indxMinRT = find(currData{2}>valMinRT, 1, 'first');
+            indxMaxRT = find(currData{2}<valMaxRT, 1, 'last');
+
+            %Set CV and RT Limits
+            currData{1} = currData{1}(indxMinCV:indxMaxCV);
+            currData{2} = currData{2}(indxMinRT:indxMaxRT);
+            currData{3} = currData{3}(indxMinRT:indxMaxRT, indxMinCV:indxMaxCV);
+
+
+            %Set Z Limits
+            tempMat = currData{3};
+            tempMat(tempMat>valMaxZ) = valMaxZ;
+            tempMat(tempMat<valMinZ) = valMinZ;
+            currData{3} = tempMat;
+
+            objFig = surf(currData{1}, currData{2}, currData{3});
+            view(0, 90);
+            
+            set(objFig,...
+                'ButtonDownFcn', {@figureSlot_Callback, vecNumbers(numCurrSample)});
+
+            shading interp
+            xlim([valMinCV valMaxCV]);
+            ylim([valMinRT valMaxRT]);
+            zlim([valMinZ valMaxZ]);
+            caxis([valMinZ, valMaxZ]);
+            axis off
+            
+            %%%%
+            % Apply desired colormap
+            strCurrColormap = get(menuColormapSelection, 'String');
+            strCurrColormap...
+                = strCurrColormap{get(menuColormapSelection, 'Value')};
+
+            switch strCurrColormap
+                case 'Jet'
+                    matColormap = colormap('jet');
+                case 'Plasma'
+                    matColormap = funcColorMap('plasma');
+            end
+
+            %%%%
+            % Apply desired scaling
+            strCurrColorScaling = get(menuColorbarScaling, 'String');
+            strCurrColorScaling...
+                = strCurrColorScaling{get(menuColorbarScaling, 'Value')};
+
+            switch strCurrColorScaling
+                case 'Linear'
+                    % Do Nothing
+                    colormap(matColormap);
+                case 'Exponential'
+                    % Create an exponential vector from min = 1 to max =
+                    % length(map).  
+
+                    numEntries = size(matColormap,1);
+                    valInc = numEntries^(1/numEntries);
+                    vecCipher = log(1:numEntries)/log(valInc);
+                    vecCipher(1) = 1;
+                    matColormap = interp1((1:numEntries)', matColormap,...
+                        vecCipher, 'pchip');
+                    colormap(matColormap);
+                case 'Density (Non-Constant)'
+                    numEntries = size(matColormap,1);
+                    vecData = currData{3};
+                    vecData = sort(vecData(:));
+
+                    vecBase = linspace(vecData(1), vecData(end), numEntries);
+                    vecIndx = linspace(1, length(vecData), numEntries);
+                    vecBaseVals = interp1((1:length(vecData)), vecData, vecIndx,...
+                        'pchip');
+
+                    % To address that vecVals must be monotonically increasing:
+                    % 1) Identify the smallest non-zero delta and define a
+                    % trivial delta that is 1/100 * that delta/length(vecData)
+                    % 2) Set all zero changes to that trivial delta and
+                    % calculate the cumulative sum of those deltas. Set the
+                    % cumulative sum vector to zero where the true delta was
+                    % not equal to zero, and then add that cumulative sum
+                    % vector to the original data to ensure non-zero positive
+                    % changes at all locations while having very little true
+                    % impact.  (end value should be equal to original end value
+                    % and largest difference should less than 1/100 * true
+                    % smallest non-zero delta)
+                    vecDiff = diff(vecBaseVals);
+                    vecBoolZero = logical(vecDiff==0);
+                    valMinDelta = min(vecDiff(~vecBoolZero));
+                    valTrivialDelta = valMinDelta / length(vecData) / 100;
+
+                    vecFakeDiff = zeros(size(vecBoolZero));
+                    vecFakeDiff(vecBoolZero) = valTrivialDelta;
+                    vecCumSum = cumsum(vecFakeDiff);
+                    vecCumSum(~vecBoolZero) = 0;
+
+                    vecVals = vecBaseVals;
+                    vecVals(2:end) = vecVals(2:end) + vecCumSum;
+
+                    matColormap = interp1(vecVals, matColormap, vecBase);
+
+                    colormap(matColormap);
+                    caxis([vecData(1), vecData(end)]);  %Needs to be executed after colormap call
+            end
+            
+            
+            numCurrSample = numCurrSample + 1;
+        end
+        
+
+        
+        valCurrFigure = get(0, 'currentfigure');
+        set(valCurrFigure, 'currentaxes', objAxisMain);
+    end
+
+    function checkboxSlot_Callback(~,~, valLocCurr)
+        cellPlaylist{valLocCurr,1}...
+            = logical(1 - cellPlaylist{valLocCurr,1});
+        if get(checkboxIncludeAllImages, 'Value')
+            boolKeepStaticSampleScanner = 1;    %No need to redraw Sample Scanner
+        end
+        funcChangeSample(0);    %If I deselected the currently shown sample, then change sample.
+    end
+
+    function figureSlot_Callback(~,~, valLocCurr)
+        boolKeepStaticSampleScanner = 1;    %No need to redraw Sample Scanner
+        currFigure = valLocCurr;
+        
+        valCurrFigure = get(0, 'currentfigure');
+        set(valCurrFigure, 'currentaxes', objAxisMain);
+        
+        funcRefreshPlaylist()
+    end
+
+
+% tabSampleScanner
+panelSampleScannerControls = uipanel(tabSampleScanner,...
+    'BackgroundColor', colorGrey,...
+    'Position', [0 .9 1 .1]);
+    % This is immediately redrawn upon viewing
+
+    uicontrol(panelSampleScannerControls, 'Style','text',...
+        'String','Show All Samples',...
+        'Units', 'normalized',...
+        'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left',...
+        'Position',[0.02 0.5 0.13 0.5]);
+    
+    checkboxIncludeAllImages = uicontrol(panelSampleScannerControls,...
+        'Style', 'checkbox',...
+        'Visible', 'on',...
+        'Units', 'normalized', 'BackgroundColor', colorGrey,...
+        'Value', 1, 'Position', [0.07 0 0.08 0.5 ],...
+        'Callback', {@checkboxIncludeAllImages_Callback});
+        function checkboxIncludeAllImages_Callback(~,~)
+            funcTabSampleScanner;
+        end
+
+
+    uicontrol(panelSampleScannerControls, 'Style','text', 'String','CV Range',...
+        'Units', 'normalized', 'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left', 'Position', [.20 0.67 .15 0.33 ]);
+    valCVSampleScannerMin = uicontrol(panelSampleScannerControls, 'Style','edit',...
+        'String', -43, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
+        'Position',[0.20 .34 .15 .33 ], 'Callback',{@funcTabSampleScanner});
+    valCVSampleScannerMax = uicontrol(panelSampleScannerControls, 'Style','edit',...
+        'String', 15, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
+        'Position',[0.20 .00 .15 .33 ], 'Callback',{@funcTabSampleScanner});
+    uicontrol(panelSampleScannerControls, 'Style','text', 'String','RT Range',...
+        'Units', 'normalized', 'BackgroundColor', colorGrey,...
+        'HorizontalAlignment', 'left', 'Position',[.40 .67 .15 .33 ]);
+    valRTSampleScannerMin = uicontrol(panelSampleScannerControls, 'Style','edit',...
+        'String', 0, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
+        'Position',[0.40 .34 .15 .33 ], 'Callback',{@funcTabSampleScanner});    
+    valRTSampleScannerMax = uicontrol(panelSampleScannerControls, 'Style','edit',...
+        'String', 505, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
+        'Position',[0.40 .00 .15 .33 ], 'Callback',{@funcTabSampleScanner});
+    
+    
+    % Zoom In
+    uicontrol(panelSampleScannerControls, 'Style','pushbutton',...
+        'Units', 'normalized', 'String', '+', 'FontSize', 16,...
+        'Position',[0.60 0.1 .07 .8], 'BackgroundColor', colorGrey,...
+        'Callback',{@buttSSZoomIn_Callback});
+    function buttSSZoomIn_Callback(~,~)
+        dirSlotsToDisplay = -1;
+        funcTabSampleScanner;
+    end
+    % Zoom Out
+    uicontrol(panelSampleScannerControls, 'Style','pushbutton',...
+        'Units', 'normalized', 'String', '-', 'FontSize', 16,...
+        'Position',[0.68 0.1 .07 .8], 'BackgroundColor', colorGrey,...
+        'Callback',{@buttSSZoomOut_Callback});   
+    function buttSSZoomOut_Callback(~,~)
+        dirSlotsToDisplay = +1;
+        funcTabSampleScanner;
+    end
+    
+    % Scroll Up
+    uicontrol(panelSampleScannerControls, 'Style','pushbutton',...
+        'Units', 'normalized', 'String', 'up', 'FontSize', 16,...
+        'Position',[0.80 0.1 .07 .8], 'BackgroundColor', colorGrey,...
+        'Callback',{@buttSSMove_Callback, -1});
+    % Scroll Down
+    uicontrol(panelSampleScannerControls, 'Style','pushbutton',...
+        'Units', 'normalized', 'String', 'dn', 'FontSize', 16,...
+        'Position',[0.88 0.1 .07 .8], 'BackgroundColor', colorGrey,...
+        'Callback',{@buttSSMove_Callback, 1}); 
+    
+    function buttSSMove_Callback(~,~,valDir)
+        dirRowsToScroll = valDir;
+        funcTabSampleScanner
+    end
+
+panelSampleScannerDisplay = uipanel(tabSampleScanner,...
+    'BackgroundColor', colorGrey,...
+    'Position', [0 0 1 .9]);
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Draw GUI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2190,6 +2716,12 @@ function funcChangeSample(valDirection)
                     currFigure = 1;
                 end
                 boolComplete = vecUsed(currFigure);
+                if valDirection == 0
+                    % If I uncheck a box of the currently selected sample,
+                    % then I may call this with a request for a direction =
+                    % 0. 
+                    valDirection = 1;
+                end
             end
         end
         funcRefreshPlaylist;
@@ -2435,6 +2967,13 @@ function funcSetMaxes()
             valZOffsetNeg = valRawZMaxNeg - valRawZMinNeg;
         end
         
+        % Setting the values for Sample Scanner at this point.  Only basing
+        % it off of the positive spectra until this blows up in my face.
+        set(valCVSampleScannerMin, 'String', get(valCVMinPos, 'String'));
+        set(valCVSampleScannerMax, 'String', get(valCVMaxPos, 'String'));
+        set(valRTSampleScannerMin, 'String', get(valRTMinPos, 'String'));
+        set(valRTSampleScannerMax, 'String', get(valRTMaxPos, 'String'));
+        
         boolAxisRangesSet = true;
     end
 end
@@ -2586,7 +3125,6 @@ function funcRefreshPlaylist()
             - str2double(get(valZMinNeg, 'String'));
         
 
-%         buttColorbar = findall(gcf, 'tag', 'Colorbar')
         objFig = findall(gcf);
         objColorbar = findall(objFig, 'tag', 'Colorbar');
         boolColorbar = false;
@@ -2701,6 +3239,11 @@ function funcRefreshPlaylist()
 
     
     set(objTableMain, 'data', cellPlaylist);
+    
+    if ~boolKeepStaticSampleScanner
+        funcTabSampleScanner;
+    end
+    boolKeepStaticSampleScanner = 0;
 end
 end 
 
