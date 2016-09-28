@@ -2255,6 +2255,18 @@ panelPredictionClassificationInfo = uipanel(tabPrediction,...
             set(valRTSampleScannerMax, 'String', num2str(vecRangeMainY(2)));
         end
         
+        % Make sure the CV and RT Ranges are legitimate
+        if str2double(get(valCVSampleScannerMin, 'String'))...
+                > str2double(get(valCVSampleScannerMax, 'String'))
+            set(valCVSampleScannerMin, 'String', num2str(vecRangeMainX(1)));
+            set(valCVSampleScannerMax, 'String', num2str(vecRangeMainX(2)));
+        end
+        if str2double(get(valRTSampleScannerMin, 'String'))...
+                > str2double(get(valRTSampleScannerMax, 'String'))
+            set(valRTSampleScannerMin, 'String', num2str(vecRangeMainY(1)));
+            set(valRTSampleScannerMax, 'String', num2str(vecRangeMainY(2)));
+        end
+        
         valCVLow = str2double(get(valCVSampleScannerMin, 'String'));
         valCVHigh = str2double(get(valCVSampleScannerMax, 'String'));
         valRTLow = str2double(get(valRTSampleScannerMin, 'String'));
@@ -2391,7 +2403,6 @@ panelPredictionClassificationInfo = uipanel(tabPrediction,...
         if numFirstSSSample < 1 || numFirstSSSample > numTotalAvailableSamples
             numFirstSSSample = 1;
         end
-        display(numFirstSSSample)
         
         cellAbbrev = funcAbbreviateNames(cellPlaylist(:,2), 3, '.');
         
@@ -3151,6 +3162,8 @@ function funcRefreshPlaylist()
         set(textCurrFile, 'String', strTitle);
         boolEmptyPlot = false;
         
+        
+        
         %%%%
         % Apply desired colormap
         strCurrColormap = get(menuColormapSelection, 'String');
@@ -3240,6 +3253,8 @@ function funcRefreshPlaylist()
     
     set(objTableMain, 'data', cellPlaylist);
     
+    %%%%
+    % Apply Sample Scanner
     if ~boolKeepStaticSampleScanner
         funcTabSampleScanner;
     end
