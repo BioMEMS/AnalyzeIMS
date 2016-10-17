@@ -68,7 +68,7 @@ currFigure = 1;
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
 
-strSoftwareName = 'AIMS, Version 1.30';
+strSoftwareName = 'AIMS, Version 1.28';
 
 ptrPreviousToast = -1;
 
