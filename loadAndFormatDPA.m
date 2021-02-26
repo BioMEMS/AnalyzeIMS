@@ -1,33 +1,52 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [ dmsDataStruct, classList ] = loadAndFormatDPA( cellPlaylist, cellData, cellClassifications )
+% inputs:   - name of samples (cellPlaylist)
+%           - cv
+%           - rf
+%           - pos spectrum dispersion
+%           - neg spectrum dispersion
+% outputs:  - dmsDataStruct
+%           - classification list (classList)
 
-numFID = fopen(filename);
+% Struct to return:
+dmsDataStruct = struct('name', [],...
+                    'cv', [],...
+                    'rf', [],...
+                    'dispersion_pos', [],...
+                    'dispersion_neg',[]...
+                    );
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+                %{
+                    'min_cv',[],...
+                    'max_cv',[],...
+                    'mid_rf',[]
+                    %}
+% initialize classList
+classList = cellPlaylist(:,4);
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+% Loop through and update dmsDataStruct based on cellPlaylist length using
+% raw data
+for i = 1:size(cellPlaylist,1)
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+    % get name (second column)
+    dmsDataStruct(i).name = cellPlaylist(i,2);
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+    % get cv data and put into dmsDataStruct (Not sure about this)
+    dmsDataStruct(i).cv = cellData{i,1};
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
+    % get rf data
+    dmsDataStruct(i).rf = cellData{i,2};
 
-fclose(numFID);
+    % get pos dispersion data (assuming 3rd column)
+    dmsDataStruct(i).dispersion_pos = flipud(cellData{i,3});
+
+    % get neg dispersion data (assuming 4th column)
+    dmsDataStruct(i).dispersion_neg = flipud(cellData{i,4});
+
+end
+
+
+
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

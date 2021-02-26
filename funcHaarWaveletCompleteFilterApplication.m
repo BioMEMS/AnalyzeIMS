@@ -1,33 +1,73 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [matOutput, cellCoeff, cellRawCoeff, matRecreate, matWaveletLevelCalculations]...
+    = funcHaarWaveletCompleteFilterApplication(matData,...
+    matWaveletLevelCalculations)
 
-numFID = fopen(filename);
+% Author: Daniel J. Peirano
+% Initially Written: 23Oct2016 (Note that I actually wrote the majority of
+% this function inside of funcWaveletAnalysisWindow and moved it over to a
+% stand alone function to be called by AnalyzeIMS.m on this date.)
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+cellCoeff = funcHaarWaveletTranslation2D(matData);
+cellRawCoeff = cellCoeff;
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+% Place matC value into own row of cells at the beginning of cellCoeff
+vecCellMatC = cellCoeff(1,[4, 4, 4, 4]);
+cellCoeff = [vecCellMatC; cellCoeff];
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+if size(cellCoeff,1) > size(matWaveletLevelCalculations,1)
+    matWaveletLevelCalculations...
+        = [zeros(size(cellCoeff,1) ... 
+        - size(matWaveletLevelCalculations,1), 3);...
+        matWaveletLevelCalculations];
+end
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
 
-fclose(numFID);
+for i=0:size(cellCoeff,1)-1
+    % Note that we're going to be processing values from the bottom up
+    for j=1:3
+        valCurr = matWaveletLevelCalculations(end-i,j); %The threshold std
+        if valCurr == 0
+            % No Change Requested
+            continue
+        end
+
+        matCurr = cellCoeff{end-i,j};
+
+        if isnan(valCurr)
+            % Do not include any values from this bandwidth
+            cellCoeff{end-i,j} = zeros(size(matCurr));
+            continue
+        end
+
+        valMean = mean(matCurr(:));
+        valStd = std(matCurr(:));
+
+        matBoolRemove = logical(matCurr < valMean+valStd*abs(valCurr))...
+            & logical(matCurr > valMean-valStd*abs(valCurr));
+        matCurr(matBoolRemove) = 0;
+
+        if valCurr < 0
+            % Soft Drop
+            matBoolAbove = logical(matCurr > valMean+valStd*abs(valCurr));
+            matBoolBelow = logical(matCurr < valMean-valStd*abs(valCurr));
+            matCurr(matBoolAbove) = matCurr(matBoolAbove)...
+                - valMean+valStd*abs(valCurr);
+            matCurr(matBoolBelow) = matCurr(matBoolBelow)...
+                + valMean+valStd*abs(valCurr);
+        end
+
+        cellCoeff{end-i,j} = matCurr;
+    end
+end
+
+matOutput = funcHaarWaveletReconstruction2D(cellCoeff(2:end,1:3),...
+    cellCoeff{1,1}, size(matData));
+
+matRecreate = funcHaarWaveletReconstruction2D( cellRawCoeff(:,1:3),...
+    cellRawCoeff{1,4}, size(matData));
+
+% fprintf('Inside funcFilterApplication: SumDiff = %f\n', sum(abs(matData(:) - matOutput(:))));
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

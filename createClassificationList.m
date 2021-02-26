@@ -1,33 +1,30 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [ classes, classComp ] = createClassificationList(dmsDataStruct)
+%createFakeClassList creates a quick and dirty array of classes for helping
+%build and conduct initial testing for classifiers
 
-numFID = fopen(filename);
+for i = 1:length(dmsDataStruct)
+    classComp{i,:} = dmsDataStruct(i).name;
+end
 
-% 'Vc'
-textscan(numFID, '%s', 1);
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
-
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
-
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
-
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
-
-fclose(numFID);
+for i = 1:length(dmsDataStruct)
+    name = dmsDataStruct(i).name;       % get name of sample
+    
+    if strfind(name, 'butanone') ~= 0
+        classes{i,:} = 'butanone';
+    elseif strfind(name, 'propanone') ~= 0
+        classes{i,:} = 'propanone';
+    elseif strfind(name, 'Ethanol') ~= 0
+        classes{i,:} = 'Ethanol';
+    elseif strfind(name, 'ethyl acetate') ~= 0
+        classes{i,:} = 'ethyl acetate';
+    elseif strfind(name, 'Methanol') ~= 0
+        classes{i,:} = 'Methanol';
+    else
+        classes{i,:} = 'blank';
+    end
+end
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

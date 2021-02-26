@@ -81,7 +81,7 @@ cubeLoadings = zeros(100, numVar);
 vecPercents = zeros(100,2);
 
 tic;
-lastTime = 0;
+lastTime = toc;
 for countPC = 1:numComp
     [~,indxCol] = max(var(matX));
     tNew = matX(:,indxCol);
@@ -113,7 +113,7 @@ for countPC = 1:numComp
 	vecPercents(countPC,2) = 1-percentDone(2)-sum(var(matFullX))/initVarRaw;
     
     currDiffTime = toc;
-    if currDiffTime-lastTime > 1;
+    if currDiffTime-lastTime > 1
         timeRem = (numComp-countPC)/countPC * currDiffTime;
         fprintf('PC Count: %d, Time Remaining = %f\n', countPC, timeRem);
         
@@ -128,8 +128,12 @@ vecPercents = vecPercents(1:countPC,:);
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-16 The Regents of the University of California, Davis
+% Copyright © 2014-21 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
+%
+% This material is available as open source for research and personal use 
+% under a PolyForm Noncommercial License 1.0.0 
+% (https://polyformproject.org/licenses/noncommercial/1.0.0/). 
 % 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted by nonprofit, research institutions for
@@ -161,5 +165,10 @@ vecPercents = vecPercents(1:countPC,:);
 % THEORY OF LIABILITY WHETHER IN CONTRACT, STRICT LIABILITY OR TORT
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF ADVISED OF THE POSSIBILITY
-% OF SUCH DAMAGE. 
-
+% OF SUCH DAMAGE.            
+% 
+% If you do not agree to these terms, do not download or use the software.
+% This license may be modified only in a writing signed by authorized
+% signatory of both parties.
+% 
+% For commercial license information please contact copyright@ucdavis.edu.

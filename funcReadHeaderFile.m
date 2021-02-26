@@ -120,8 +120,12 @@ end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-16 The Regents of the University of California, Davis
+% Copyright © 2014-21 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
+%
+% This material is available as open source for research and personal use 
+% under a PolyForm Noncommercial License 1.0.0 
+% (https://polyformproject.org/licenses/noncommercial/1.0.0/). 
 % 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted by nonprofit, research institutions for

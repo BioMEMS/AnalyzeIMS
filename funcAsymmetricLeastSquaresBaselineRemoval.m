@@ -93,8 +93,12 @@ matOut = matY - matZ;
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-16 The Regents of the University of California, Davis
+% Copyright © 2014-21 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
+%
+% This material is available as open source for research and personal use 
+% under a PolyForm Noncommercial License 1.0.0 
+% (https://polyformproject.org/licenses/noncommercial/1.0.0/). 
 % 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted by nonprofit, research institutions for
@@ -126,6 +130,10 @@ matOut = matY - matZ;
 % THEORY OF LIABILITY WHETHER IN CONTRACT, STRICT LIABILITY OR TORT
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF ADVISED OF THE POSSIBILITY
-% OF SUCH DAMAGE. 
-
-
+% OF SUCH DAMAGE.            
+% 
+% If you do not agree to these terms, do not download or use the software.
+% This license may be modified only in a writing signed by authorized
+% signatory of both parties.
+% 
+% For commercial license information please contact copyright@ucdavis.edu.

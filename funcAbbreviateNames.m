@@ -88,11 +88,12 @@ while numCurrGroup < numTotalGroups
     vecEndOnNumber = find(ismember(cellLastChar, cellNumbers));
     
     for i=1:length(vecEndOnNumber)
+%         return
         % We're going to just add characters that are numbers to
         % cellCharBlock until no numbers next in char. (Don't forget to
         % iterate vecLastNumber.)
         strCurr = cellCurr{vecEndOnNumber(i)};
-        while vecLastNumber(vecEndOnNumber(i))+1 <= min(vecLength)...
+        while vecLastNumber(vecEndOnNumber(i))+1 <= length(strCurr)...% min(vecLength)...
                 && ismember(strCurr(vecLastNumber(vecEndOnNumber(i))+1), cellNumbers)
             vecLastNumber(vecEndOnNumber(i)) = vecLastNumber(vecEndOnNumber(i)) + 1;
             cellCharBlock{vecEndOnNumber(i)} = [cellCharBlock{vecEndOnNumber(i)},...
@@ -140,8 +141,12 @@ cellAbbrev = cellAbbrev(indxRev);
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-16 The Regents of the University of California, Davis
+% Copyright © 2014-21 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
+%
+% This material is available as open source for research and personal use 
+% under a PolyForm Noncommercial License 1.0.0 
+% (https://polyformproject.org/licenses/noncommercial/1.0.0/). 
 % 
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted by nonprofit, research institutions for
@@ -180,42 +185,3 @@ cellAbbrev = cellAbbrev(indxRev);
 % signatory of both parties.
 % 
 % For commercial license information please contact copyright@ucdavis.edu.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

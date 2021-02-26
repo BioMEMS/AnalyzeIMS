@@ -1,33 +1,40 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [ models,misclassificationRate, uniqueClasses ] = buildSVMModel( predictors, classes )
+%buildSVMModel builds a multi-class SVM model
+% Date: 30oct2017
+% Author: Paul Hichwa
 
-numFID = fopen(filename);
+% Get information about classes
+uniqueClasses = sort(unique(classes));
+numOfClasses = length(uniqueClasses);
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+% Initialize matrices
+posteriorProbs = zeros(size(predictors,1),length(uniqueClasses));
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+% Build models for each class versus all
+for j = 1:numOfClasses
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+    % create matrix to identify which samples belong to which
+    % classification
+    for i = 1:length(classes)
+        if strcmp(classes{i}, uniqueClasses{j})
+            classVSall{i} = uniqueClasses{j};
+        else
+            classVSall{i} = 'all';
+        end
+    end
+    
+    firstModels{j} = fitcsvm(predictors, classVSall);              % create models
+    cv_models{j} = crossval(firstModels{j});                       % cross-validate model using kfold with 10 folds
+    misclassificationRate(j) = kfoldLoss(cv_models{j});       % calculate misclassification rate for each of the one-vs-all models
+    compactModels{j} = compact(firstModels{j});                    % create compact models to conserve memory
+    compactModels{j} = fitSVMPosterior(compactModels{j},...
+                                    predictors, classVSall);  % estimates the optimal score-to-posterior-probability-transformation function
+    models{j} = compactModels{j};
+end
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
 
-fclose(numFID);
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
@@ -76,3 +83,4 @@ fclose(numFID);
 % signatory of both parties.
 % 
 % For commercial license information please contact copyright@ucdavis.edu.
+

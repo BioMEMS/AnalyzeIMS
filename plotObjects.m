@@ -1,33 +1,60 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function plotObjects( dmsDataStruct, type, sampleNum, ridgesPlot )
+%plotObjects plots highlighted found peak regions based on
+%   detectSplineObjects function.
 
-numFID = fopen(filename);
+%% Compare type input and initialize correct histogram matrix
+if strncmpi(type, 'pos', 3)
+    BWfinal = dmsDataStruct(sampleNum).bwfinal_pos;
+    I = dmsDataStruct(sampleNum).dispersion_pos;
+    xplot = ridgesPlot.xplotPos;
+    yplot = ridgesPlot.yplotPos;
+elseif strncmpi(type, 'neg', 4)
+    BWfinal = dmsDataStruct(sampleNum).bwfinal_neg;
+    I = dmsDataStruct(sampleNum).dispersion_neg;
+    xplot = ridgesPlot.xplotNeg;
+    yplot = ridgesPlot.yplotNeg;
+else
+    error('Inputs to plotTrainedHist need to include pos or neg char string.');
+end
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+%% Calculate boundaries of regions and display
+[~,L,~,~] = bwboundaries(BWfinal, 'noholes');
+% if above line does not work, then use [B,L,N,A] = bwboundaries(BWfinal,'noholes');
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+% transparency to superimpose pseudo-color label matrix
+figure; imshow(I);
+hold on;
+himage = imshow(label2rgb(L, @jet, [0.5 0.5 0.5]));
+alpha = 0.4;
+set(himage, 'AlphaData', alpha);
+title('Highlighted spline objects detected');
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+%% plot interpreted data
+figure; imshow(I)
+hold on;
+plot(xplot,yplot, 'r.', 'markerSize', 7);
+title('polynomial interpretation');
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+%% Possible future functionality of different views of the segmentation
+% colors = ['b' 'g' 'r' 'c' 'm' 'y'];
+% figure; imshow(label2rgb(L, @jet, [0.5 0.5 0.5]));
+% title('boundaries');
+% hold on;
+% for k = 1:length(B)
+%     boundary = B{k};
+%     cidx = mod(k, length(colors))+1;
+%     plot(boundary(:,2), boundary(:,1), colors(cidx), 'LineWidth', 1);
+%     
+%     % randomize text position for better visibility
+%     rndRow = ceil(length(boundary)/(mod(rand*k,7)+1));
+%     col = boundary(rndRow,2);
+%     row = boundary(rndRow,1);
+%     h = text(col+1, row-1, num2str(L(row,col)));
+%     set(h, 'Color', colors(cidx), 'FontSize', 10, 'FontWeight', 'bold');
+% end
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
 
-fclose(numFID);
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
@@ -76,3 +103,4 @@ fclose(numFID);
 % signatory of both parties.
 % 
 % For commercial license information please contact copyright@ucdavis.edu.
+

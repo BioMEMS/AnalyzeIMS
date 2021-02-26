@@ -1,33 +1,15 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
-
-numFID = fopen(filename);
-
-% 'Vc'
-textscan(numFID, '%s', 1);
-
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
-
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
-
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
-
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
-
-fclose(numFID);
+% parameter - (matlab.graphics.axis.Axes, double, double, double)
+function func_plot_graph(axes_name, mat_cv, mat_rt, mat_intensity,bone)
+    axes(axes_name);
+    surf(mat_cv,mat_rt,mat_intensity);
+    shading interp
+    view(0,90)
+    xlim([min(mat_cv),max(mat_cv)])
+    ylim([min(mat_rt),max(mat_rt)])
+    if nargin == 5
+        colormap(axes_name,bone);
+    end
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

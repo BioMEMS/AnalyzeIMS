@@ -1,34 +1,57 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function plotTrainedHist_v01( histData, type, sampleNum)
+%plotHistogram plots the Bag-of-Visual-Words Histogram for a particular
+%image used in training
+%
+%   inputs:     histData struct
+%               sample number to display
+%   outputs:    histogram plot
+%
+%   Author: Paul Hichwa
+%   Date written/updated: 09Aug2017
 
-numFID = fopen(filename);
+%% Compare type input and initialize correct histogram matrix
+if strncmpi(type, 'pos', 3)
+    histogramData = histData.histogram_pos;
+    numClusters = histData.totNumClusters_pos;
+    clusterAssignments = histData.clusterAssignment_pos;
+elseif strncmpi(type, 'neg', 4)
+    histogramData = histData.histogram_neg;
+    numClusters = histData.totNumClusters_neg;
+    clusterAssignments = histData.clusterAssignment_neg;
+else
+    error('Inputs to plotTrainedHist need to include pos or neg char string.');
+end
 
-% 'Vc'
-textscan(numFID, '%s', 1);
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+%% Generate histogram plot
+if histogramData(sampleNum,:) == 0
+    disp(['There is no data to display for sample ' num2str(sampleNum)]);
+else
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+maxCount = max(histogramData(sampleNum,:));
+[counts, centers] = hist(clusterAssignments(:, sampleNum), numClusters);		% plot histogram of the extracted cluster assignments with given number of bins based on number of clusters
+counts(1) = 0;      % set bin zero to zero, because clusters start from index 1
+figure('Color', 'w');
+bar(centers, counts, 'BarWidth', 0.5);
+set(get(gca,'child'), 'FaceColor', [0 0.6 0.6], 'EdgeColor', 'w');
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
+% Figure adjustments
+figSize = [300 650];    % Figure size
+screensize = get(0, 'ScreenSize');  % Screen size
+xpos = ceil((screensize(3) - figSize(2))/2);    % horizontal center
+ypos = ceil((screensize(4) - figSize(1))/2);    % vertical center
+set(gcf, 'position', [ xpos, ypos, figSize(2) figSize(1) ]);
 
-fclose(numFID);
+% Title and axes adjustments
+title(['Histogram for Sample ', num2str(sampleNum)], 'FontSize', 12, 'FontWeight', 'bold'); %, 'FontName', 'Calibri');
+xlabel('Codebook Vocabulary', 'FontName', 'Calibri');
+ylabel('Visual Word Count', 'FontName', 'Calibri');
+axis([0 (numClusters + 1) 0 (maxCount + (0.2*maxCount))]);
 
+end
+
+end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
@@ -76,3 +99,4 @@ fclose(numFID);
 % signatory of both parties.
 % 
 % For commercial license information please contact copyright@ucdavis.edu.
+

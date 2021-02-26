@@ -1,33 +1,25 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [ numOfClusters ] = determineNumOfClusters( featureVectorArray )
+%determineNumOfClusters uses hierarchical clustering to determine the
+%number of clusters that kmeans should use.
+%
+% updated 26sep2017 by Paul Hichwa
 
-numFID = fopen(filename);
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+X = featureVectorArray;
+Y = pdist(X, 'euclidean');
+Z = linkage(Y, 'weighted');
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+% calculate inconsistency. 
+I = inconsistent(Z);
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+% calculate cutoff
+cutoff = max(I(:,4)) -0.00005;
+T = cluster(Z, 'cutoff', cutoff);
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+% number of clusters:
+numOfClusters = max(T);
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
-
-fclose(numFID);
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

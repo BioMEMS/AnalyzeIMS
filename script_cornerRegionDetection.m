@@ -1,33 +1,55 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Script for generate figure for corner and region detection
 
-numFID = fopen(filename);
+clear all; close all; clc;
+%% Create figure
+f = figure('color', 'w');
+cornersDetected = axes('Parent',f, 'Position', [.1 .1 .35 .8]);
+regionsDetected = axes('Parent',f, 'Position', [.55 .1 .35 .8]);
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+%% Load analyzed data from aug 26
+load('workspace_sep01');
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+%% Select sample number
+sampleNum = 106;
+I = dmsDataStruct(sampleNum).dispersion_pos;
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+x = dmsDataStruct(sampleNum).cv;
+y = dmsDataStruct(sampleNum).rf;
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+%% Corners
+axes(cornersDetected);
+imagesc(I);       % show image
+colormap('Bone');
+hold on;
+plot(dmsDataStruct(sampleNum).corners_pos_plotting.selectStrongest(50));     % plots the corners detected (limiting to 10)
+title('A. Corners Detected','fontweight','bold');
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
+colorbar('box', 'off');
+xlabel('Compensation Voltage');
+ylabel('Separation Voltage (RF)');
+set(gca, 'XTick', []);         % need to figure out how to plot rounded numbers
+set(gca, 'XTickLabel',[] );               % need to figure out how to plot rounded numbers
+set(gca, 'YTick', []);
+set(gca, 'YTickLabel', []);
 
-fclose(numFID);
+
+%% Regions
+axes(regionsDetected);
+imagesc(I);
+hold on;
+plot(dmsDataStruct(sampleNum).regions_pos_plotting.selectStrongest(10));     % plots the corners detected (limiting to 10)
+title('B. Regions Detected', 'fontweight','bold');
+
+colorbar('box', 'off');
+xlabel('Compensation Voltage');
+ylabel('Separation Voltage (RF)');
+set(gca, 'XTick', []);         % need to figure out how to plot rounded numbers
+set(gca, 'XTickLabel',[] );               % need to figure out how to plot rounded numbers
+set(gca, 'YTick', []);
+set(gca, 'YTickLabel', []);
+
+
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

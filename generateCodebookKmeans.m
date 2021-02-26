@@ -1,33 +1,41 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [ clusterAssign_idx, clusterCentroids ] = generateCodebookKmeans( featureVector, Kclusters )
+%generateCodebook uses parallel pooling and kmeans to generate n clusters
+%that correspond to n 'visual code words'
+%   Need to fill this out
+%   
+%   Author: Paul Hichwa
+%   Date written/updated: 24Aug2017
+%
+%	inputs: featureVector (M = # of observations/features,
+%           N = feature descriptors),
+%           number of clusters (Kclusters),
+%           maxIterations (number of max iterations),
+%           Reps (# of times to repeat clustering using new initial cluster centroid position)
+%	output: cluster assignment indices for each observation/feature and
+%           centroids for each feature (this is the codebook/vocabulary)
 
-numFID = fopen(filename);
+%% Check if parallel pool is on
+p = gcp('nocreate');
+if isempty(p)
+    %% invoke parallel computing (see https://www.mathworks.com/help/stats/kmeans.htm for more information)
+    pool = parpool;					% invokes pool of worker to compute replicates in parallel
+    stream = RandStream('mlfg6331_64');		% random number stream (input argument, ‘mlfg6331_64’ specifies to use multiplicative lagged fibonacci generator algorithm)
+    options = statset('UseParallel', 1, 'UseSubstreams', 1, 'Streams', stream);		% options is a structure array containing field that specify options for controlling estimation. We will use options as an input to kmeans.
+else
+    stream = RandStream('mlfg6331_64');		% random number stream (input argument, ‘mlfg6331_64’ specifies to use multiplicative lagged fibonacci generator algorithm)
+    options = statset('UseParallel', 1, 'UseSubstreams', 1, 'Streams', stream);		% options is a structure array containing field that specify options for controlling estimation. We will use options as an input to kmeans.
+end
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+%% implement kmeans:
+%	Outputs:
+%	idx = n-by-1 vector containing cluster indices for each observation. Rows correspond to points and columns correspond to variables
+%	C = k-by-p matrix of k cluster centroid locations
+% 	‘Distance’ type to be determined - need more research on this (sqeulidean, cityblock, cosine, correlation, hamming)
+[clusterAssign_idx, clusterCentroids] = kmeans(featureVector, Kclusters, 'Distance', 'cityblock',...
+                    'Replicates', 10, 'MaxIter', 1000, 'Options', options, 'Display', 'final');
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
-
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
-
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
-
-fclose(numFID);
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

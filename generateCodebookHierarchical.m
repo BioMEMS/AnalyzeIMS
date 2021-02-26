@@ -1,33 +1,24 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function [ clusterAssign_idx, numOfClusters ] = generateCodebookHierarchical( featureVectorArray )
+%generateCodebookHierarchical
 
-numFID = fopen(filename);
+%generates the heirarchical cluster tree
+X = featureVectorArray;
+Y = pdist(X, 'euclidean');
+Z = linkage(Y, 'weighted');
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+% calculate inconsistency. 
+I = inconsistent(Z);
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+% calculate cutoff 
+% the fourth column has the inconsistency matrix 
+% cutoff used to stop cluster algorithm once if reaches a certain point
+cutoff = max(I(:,4)) -0.00005;
+clusterAssign_idx = cluster(Z, 'cutoff', cutoff);
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+% number of clusters:
+numOfClusters = max(clusterAssign_idx);
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
-
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
-
-fclose(numFID);
+end
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 

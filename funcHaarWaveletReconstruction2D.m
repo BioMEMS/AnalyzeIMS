@@ -1,33 +1,67 @@
-function [ Vc, timeStamp, amplitude ] = DMSRead( filename )
-%Because the DMS stores files as pure ASCII files with the following
-%format:
-%Vc
-%    [\tab] [Compensation Voltage Axis]
-%Time Stamp [\tab] Positive Channel
-% [Column of Time Stamps] [Magnitude Values]
+function matCOut = funcHaarWaveletReconstruction2D(cellCoeff, matC, sizeMat)
 
-numFID = fopen(filename);
+% Author: Daniel J. Peirano
+% Initially Written: 29Sep2016
 
-% 'Vc'
-textscan(numFID, '%s', 1);
+% This function will reconstruct a full matrix based on the coefficients
+% provided in cellCoeff with the initial "matC" set as matC.  sizeMat
+% is the correct size of the matrix to be returned to the user.
 
-%Vc Values
-Vc = textscan(numFID, '%f');
-Vc = Vc{1};
-numVc = length(Vc);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Debug
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%Time Stamp [\tab] Positive Channel
-textscan(numFID, '%s', 4);
+% %matTemp currently comes from Zander's Banana data
+% % matGeneralTemp = cellData{16,3};
+% % matGeneralTemp = cellData{30,3};
+% 
+% clearvars -except matGeneralTemp
+% 
+% matY = matGeneralTemp;
+% boolVerify = 1;
+% sizeMat = size(matY);
+% 
+% tic
+% cellCoeff = funcHaarWaveletTranslation2D(matY);
+% toc
+% 
+% matC = cellCoeff{1,4};
+% 
+% tic
 
-%Time Stamp and Data
-matTotal = textscan(numFID, '%f');
-matTotal = matTotal{1};
-matTotal = reshape( matTotal, numVc+1, length(matTotal)/(numVc+1) )';
+     
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Code
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
 
-timeStamp = matTotal(:,1);
-amplitude = matTotal(:,2:end);
+% Following is the inverse of matrix used to calculate the 2D Haar wavelet
+% coefficients, and therefore can be used for reconstruction.
+matInv = inv([1 -1 -1 1; 1 -1 1 -1; 1 1 -1 -1; 1 1 1 1]); 
 
-fclose(numFID);
+for i=1:size(cellCoeff,1)
+    %Matrices are defined as UpperLeft, UpperRight, LowerLeft, LowerRight
+    %for the resulting total matrix that will be generated as matC
+    cellResults = cell(4,1);
+    for j = 1:4
+        cellResults{j} = matInv(j,1) * cellCoeff{i,1}...
+            + matInv(j,2) * cellCoeff{i,2}...
+            + matInv(j,3) * cellCoeff{i,3}...
+            + matInv(j,4) * matC;
+    end
+    matKey = kron(ones(2^(i-1)), [1,0;0,0]);
+    matKey = [zeros(1,2^i+1);zeros(2^i,1), matKey]; %#ok<AGROW>
+    
+    matC = nan(2^i);
+    matC(logical(matKey(2:end,2:end))) = cellResults{1};
+    matC(logical(matKey(2:end,1:end-1))) = cellResults{2};
+    matC(logical(matKey(1:end-1,2:end))) = cellResults{3};
+    matC(logical(matKey(1:end-1,1:end-1))) = cellResults{4};
+end
+valSide = length(matC); % matC is a square so length is fine.
+numFront = floor( (valSide-sizeMat(2))/2 );
+numTop = floor( (valSide-sizeMat(1))/2 );
+
+matCOut = matC(numTop+1:numTop+sizeMat(1), numFront+1:numFront+sizeMat(2));
 
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
