@@ -39,12 +39,15 @@ arrScanNeg = cell(numPOS, 1);
 
 %Load Data
 for i=1:numPOS
-    try
+    try  
         [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
             = DMSRead([listFiles{i}, '_Pos.xls']);
         [vecVCTest, vecTSTest, arrScanNeg{i}]...
             = DMSRead([listFiles{i}, '_Neg.xls']);
-        
+        k1 = arrVC{i}
+        k2 = vecVCTest
+        k3 = vecTSTest
+        k4 = arrTimeStamp{i}
         if ~(all(vecVCTest == arrVC{i})) || ~(all(vecTSTest == arrTimeStamp{i}))
             warning('funcScanData:DMSReadFail',...
                 'DMSRead failed on file (Pos/Neg VC or Time Stamp Not Equal): \n %s \n',...
@@ -148,7 +151,7 @@ end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

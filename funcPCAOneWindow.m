@@ -185,7 +185,7 @@ ylabel(sprintf('PC 2 (%.2f%%)', vecPercents(2,2)*100));
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

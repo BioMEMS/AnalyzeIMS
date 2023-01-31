@@ -16,6 +16,14 @@ Vc = textscan(numFID, '%f');
 Vc = Vc{1};
 numVc = length(Vc);
 
+
+% file is not in same format
+if (numVc == 0)
+    [Vc, timeStamp, amplitude ] = read_DMS(filename);
+    return
+end
+disp(Vc)
+disp(size(Vc))
 %Time Stamp [\tab] Positive Channel
 textscan(numFID, '%s', 4);
 
@@ -28,11 +36,71 @@ timeStamp = matTotal(:,1);
 amplitude = matTotal(:,2:end);
 
 fclose(numFID);
+end
 
+
+function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
+    disp(filename)
+    disp(class(filename))
+    filename=convertCharsToStrings(filename);
+    disp(class(filename))
+    cv_row = 1;
+    %right_cv = t{cv_row,3:end};
+    %left_cv = str2double(cell2mat(t{cv_row,2}));
+    %Vc = horzcat(left_cv,right_cv)';
+    
+    cv_row = 2;
+    T = readtable(filename,'NumHeaderLines',0,'ReadVariableNames',false);
+    amplitude = str2double(T{4:end,2:end});
+    timeStamp = str2double(T{4:end,1});
+    Vc = str2double(T{cv_row,2:end})';
+    disp(Vc)
+    disp(size(amplitude))
+    
+%     try
+%     t=readtable(filename);
+%     cv_row = 1;
+%     Vc = str2double(t{cv_row,2:end})';
+%     timeStamp = str2double(t{3:end,1});
+%     amplitude = str2double(t{3:end,2:end});
+%     catch
+%         cv_row = 2;
+%         T = readtable(filename,'NumHeaderLines',0,'ReadVariableNames',false);
+%         amplitude = str2double(T{4:end,2:end});
+%         timeStamp = str2double(T{1:end,1});
+%         Vc = str2double(T{cv_row,2:end})';
+%     end
+%     try
+%     cv_row = 2;
+%     T = readtable(filename,'NumHeaderLines',0,'ReadVariableNames',false);
+%     amplitude = str2double(T{4:end,2:end});
+%     timeStamp = str2double(T{1:end,1});
+%     Vc = str2double(T{cv_row,2:end})';
+%     catch
+%         disp('ok')
+%     end
+    %-------------------Old code----------------------%
+%     Vc = str2double(t{cv_row,2:end})';
+%     timeStamp = str2double(t{3:end,1});
+%     amplitude = str2double(t{3:end,2:end});
+    %right_amp = t{3:end,3:end};
+    %left_amp = str2double(t{3:end,2});
+    %amplitude = horzcat(left_amp,right_amp);
+    
+    %-------------Debugging-----------------%
+    % FileName         = '2021_01_20_Run_9_Neg.xls';
+%     cv_row = 2;
+%     T = readtable(filename,'NumHeaderLines',0,'ReadVariableNames',false);
+%     amplitude = str2double(T{4:end,2:end});
+%     timeStamp = str2double(T{1:end,1});
+%     Vc = str2double(T{cv_row,2:end})';
+    %------------------------------------------%
+    
+end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

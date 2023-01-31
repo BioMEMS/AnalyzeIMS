@@ -23,6 +23,7 @@ for j = 1:numOfClasses
         end
     end
     
+    
     firstModels{j} = fitcsvm(predictors, classVSall);              % create models
     cv_models{j} = crossval(firstModels{j});                       % cross-validate model using kfold with 10 folds
     misclassificationRate(j) = kfoldLoss(cv_models{j});       % calculate misclassification rate for each of the one-vs-all models
@@ -39,7 +40,7 @@ end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

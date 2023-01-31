@@ -1064,7 +1064,7 @@ matColorMap([2:4:128, 3:4:128, 4:4:128],:) = [];
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

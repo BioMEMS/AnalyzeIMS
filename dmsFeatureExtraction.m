@@ -1,17 +1,13 @@
-function [ dmsDataStruct, totalFV, NumClusters_pos, NumClusters_neg ] = dmsFeatureExtraction_V02( dmsDataStruct, metricThreshVar, minContrastVar )
+function [ dmsDataStruct, totalFV_pos, totalFV_neg, NumClusters_pos, NumClusters_neg ] = dmsFeatureExtraction( dmsDataStruct )
 %dmsFeatureExtractV02 detects and extracts features from a data set
 %   This version uses for loops instead of relying on arrayfun
-%
-%   Input: dmsDataStruct
-%   Output: - updated dmsDataStruct
-%           - totalFV struct
-%           - number of clusters (maybe get rid of this??)
 %
 %   Author: Paul Hichwa
 %   Date written/updated: 04aug2017
 
-%% Initialize output totalFV struct
-totalFV = struct('pos',[], 'neg', []);
+%% Initialize total feature vectors
+totalFV_pos = [];
+totalFV_neg = [];
 
 %% Initialize array for size of allFeatureVectors to determine NumClusters
 sizes_pos = zeros(1,size(dmsDataStruct,2));
@@ -31,7 +27,7 @@ for i = 1:size(dmsDataStruct,2)
     else
         %% Detect corners using matlab function (computer vision toolbox) for FAST algorithm (detectFASTFeatures)
         % Note: the minimum contrast can be modified and will become more sensitive
-        % when it is lowered. If lowered it willl detect more corners This might be something to allow the user to do? Need
+        % when it is lowered. This might be something to allow the user to do? Need
         % to think on this more. Input range: (0,1)
         %
         % Note: need to think about possibly using this with ROI (rectangle region
@@ -39,28 +35,16 @@ for i = 1:size(dmsDataStruct,2)
         % Note: currently overrides the default FREAK descriptor method to use SURF
         % descriptor method.
         % positive dispersion plot corner detection:
-        % mincontrast defined the threshold/difference between center pixel
-        % and 1,5,9,13 points must be to be a corner
-        cornersPOS = detectFASTFeatures(dmsDataStruct(i).dispersion_pos, 'MinContrast', minContrastVar); %0.000000001);
-        % cornerPOS is a cornerPoints object with three metrics
-        % 1. Location - x,y location of corners
-        % 2. Metric - strength of detected features
-        % 3. Count - number of corners
-        
-        % dmsDataStruct.corners_pos is has rows of corners from FAST and
-        % each corner has a feature vector decribed by the columns.
-        % dmsDataStruct(i).corners_pos_plotting is the valid points
+        cornersPOS = detectFASTFeatures(dmsDataStruct(i).dispersion_pos, 'MinContrast', 0.000000001);
         [dmsDataStruct(i).corners_pos, dmsDataStruct(i).corners_pos_plotting] = extractFeatures(dmsDataStruct(i).dispersion_pos, cornersPOS,'Method', 'SURF');        
-        % disp(dmsDataStruct(i).corners_pos)
-        % disp(size(dmsDataStruct(i).corners_pos))
-        % disp(dmsDataStruct(i).corners_pos_plotting)
+
         %% Detect regions using matlab functin (computer vision toolbox) for SURF algorithm (detectSURFFeatures)
         % Note: the MetricThreshold can be changed to give better region detection
         % based on contrast of the image - the lower the value the more regions
         %
         % Note: default descriptor method is SURF
         % Positive dispersion plot region detection and extraction:
-        regionsPOS = detectSURFFeatures(dmsDataStruct(i).dispersion_pos, 'MetricThreshold', metricThreshVar, 'NumOctaves', 3);
+        regionsPOS = detectSURFFeatures(dmsDataStruct(i).dispersion_pos, 'MetricThreshold', 10, 'NumOctaves', 3);
         % Use 'Upright', true to indicate that we do not need the image descriptors
         % to capture rotation information.
         [dmsDataStruct(i).regions_pos, dmsDataStruct(i).regions_pos_plotting] = extractFeatures(dmsDataStruct(i).dispersion_pos, regionsPOS);
@@ -92,11 +76,9 @@ for i = 1:size(dmsDataStruct,2)
     % images respectively. result is MxN matrix where M is the number of
     % feature vectors and N is the number of descriptors for each feature
     % vector.
-    totalFV.pos = [totalFV.pos; dmsDataStruct(i).allFeatureVectors_pos];
-    totalFV.neg = [totalFV.neg; dmsDataStruct(i).allFeatureVectors_neg];
+    totalFV_pos = [totalFV_pos; dmsDataStruct(i).allFeatureVectors_pos];
+    totalFV_neg = [totalFV_neg; dmsDataStruct(i).allFeatureVectors_neg];
     
-    % each column represents a sample. element in the column is how many
-    % corners and regions are found
     % Update size array for determining number of clusters to use
     sizes_pos(1,i) = size(dmsDataStruct(i).allFeatureVectors_pos, 1);
     sizes_neg(1,i) = size(dmsDataStruct(i).allFeatureVectors_neg, 1);

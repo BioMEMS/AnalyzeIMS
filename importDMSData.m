@@ -1,4 +1,4 @@
-function [ dmsDataStruct ] = importDMSData_V02( )
+function [ dmsDataStruct ] = importDMSData( )
 %importDMSData allows user to select excel docs of DMS data to be imported
 %and formatted.
 %   Detailed explanation goes here
@@ -67,7 +67,7 @@ for i = 1:size(fileNameArray,2)
                 % on HDR devices settings using custom function:
                 % formatDMSData (input arguments = HDR, NEG, and POS files)
                 DP_counter = DP_counter + 1;    % update counter for number of dispersion plot sets
-                dmsDataStruct(DP_counter) = formatDMSData_V02(fileNameArray(i), fileNameArray(i+1), fileNameArray(i+2), PathName, FilterIndex);
+                dmsDataStruct(DP_counter) = formatDMSData(fileNameArray(i), fileNameArray(i+1), fileNameArray(i+2), PathName, FilterIndex);
                
 
             else
@@ -76,7 +76,7 @@ for i = 1:size(fileNameArray,2)
                 
                 % Modify dmsDataStruct(i) struct to house only NEG data (TO DO)
                 DP_counter = DP_counter + 1;        % update counter for dispersion plot dataset index
-                dmsDataStruct(DP_counter) = formatDMSData_V02(fileNameArray(i), fileNameArray(i+1), PathName, FilterIndex);
+                dmsDataStruct(DP_counter) = formatDMSData(fileNameArray(i), fileNameArray(i+1), PathName, FilterIndex);
                             
                 
             end
@@ -92,7 +92,7 @@ for i = 1:size(fileNameArray,2)
 
             % Modify dmsData(i) struct to house only POS data
             DP_counter = DP_counter + 1;    % update counter for number of dispersion plot sets
-            dmsDataStruct(DP_counter) = formatDMSData_V02(fileNameArray(i), fileNameArray(i+1), PathName, FilterIndex);
+            dmsDataStruct(DP_counter) = formatDMSData(fileNameArray(i), fileNameArray(i+1), PathName, FilterIndex);
          
         
         end

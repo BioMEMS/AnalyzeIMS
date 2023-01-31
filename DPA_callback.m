@@ -606,8 +606,17 @@ set(DPA_figure, 'Visible', 'on');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Load workspace data
-load('spline_init_data.mat');
-[dmsDataStruct, classList] = loadAndFormatDPA(cellPlaylist, cellData);
+% disp('loading data')
+% spline_init_data_variable = load('spline_init_data.mat');
+% disp('loading data done')
+% [dmsDataStruct, classList] = loadAndFormatDPA(cellPlaylist, cellData);
+
+disp('loading data')
+spline_init_data_variable = load('spline_init_data.mat');
+disp('loading data done')
+[dmsDataStruct, classList] = loadAndFormatDPA(spline_init_data_variable.cellPlaylist, spline_init_data_variable.cellData);
+
+
 
 % Filling in sample table
 for m = 1:length(dmsDataStruct)
@@ -1675,7 +1684,7 @@ end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

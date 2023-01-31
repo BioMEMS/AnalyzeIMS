@@ -84,8 +84,8 @@ for i=1:length(cellRawData)
                 cellOutput{numRow,3} = strCurr(vecLocTabs(2)+1:end);
             end
         otherwise
-            error('funcReadHeaderFile: Number of Tabs found in row %d of HDR file %s not accounted for!',...
-                i, filename)
+            %error('funcReadHeaderFile: Number of Tabs found in row %d of HDR file %s not accounted for!',...
+            %    i, filename)
     end
 end
 
@@ -116,11 +116,10 @@ if nargin == 2
     end
 end
     
-
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 

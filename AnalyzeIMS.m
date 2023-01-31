@@ -56,7 +56,7 @@ end
 global matWaveletLevelCalculations strCopyright
 
 matWaveletLevelCalculations = zeros(0,3);
-strCopyright = 'Copyright The Regents of the University of California, Davis campus, 2014-2021.  All rights reserved.';
+strCopyright = 'Copyright The Regents of the University of California, Davis campus, 2014-18.  All rights reserved.';
 
 cellPreprocessing = {};
 cellCategoryInfo = {};
@@ -72,7 +72,7 @@ currFigure = 1;
 vecSortColumns = [0, 0, 1, 0];
 boolEmptyPlot = true;
 
-strSoftwareName = 'AIMS, Version 1.301';
+strSoftwareName = 'AIMS, Version 1.40';
 
 ptrPreviousToast = -1;
 
@@ -319,8 +319,8 @@ valCVMinPos = uicontrol(panelRange, 'Style','edit', 'String', -45, 'Units', 'nor
     'Max', 1, 'Min', 0, 'Position', [valRightStart 0.71 valFieldWidth valFieldHeight ],...
     'Callback', {@editCVMinPos});
     function editCVMinPos(~, ~)
-        valMax = str2double(get(valCVMaxPos, 'String'));
-        valMin = str2double(get(valCVMinPos, 'String'));
+        valMax = str2double(get(valCVMaxPos, 'String'))
+        valMin = str2double(get(valCVMinPos, 'String'))
         if valMax < valMin+5
             set(valCVMinPos, 'String', num2str(valMax-5));
         end
@@ -691,14 +691,14 @@ buttPopOutFigure = uicontrol('Style','pushbutton', 'Units', 'normalized',...
 
 
 %%%%%%%%%%%%%%%%%%%%%
-% Button to Export Variables to Workspace
+% Button to Dump Variables to Workspace
 exportVariablesToWorkspace = uicontrol('Style','pushbutton', 'Units', 'normalized',...
     'String','Export Variables',...
     'Position',[.41 0.09 .09 .03], ...
     'Callback',{@exportVariablesToWorkspace_Callback}); %#ok<NASGU>
     function exportVariablesToWorkspace_Callback(~,~)
 %         vecUsed = logical(cellfun(@(x) x, cellPlaylist(:,1)));
-        numBaseCol = length(cellColNames);
+        numBaseCol = length(cellColNames)
         cellCategories = get(objTableMain, 'ColumnName');
         if get(buttBoolLeaveOneOut, 'Value')
             valModelType = 1;
@@ -747,9 +747,9 @@ uicontrol('Style','pushbutton', 'Units', 'normalized', 'String','About',...
         strDisplay = sprintf('%s\nBased on Analysis Developed by:\n     Alberto Pasamontes\n     Daniel J. Peirano\n     Paul Hichwa\n     Danny Yeap', strDisplay);
         strDisplay = sprintf('%s\nWork Done in:\n     Bioinstrumentation and BioMEMS Laboratory\n     PI: Cristina E. Davis\n     University of California, Davis', strDisplay);
         strDisplay = sprintf('%s\nLocation of Log File:\n     %s', strDisplay, strLogFile);
-        strDisplay = sprintf('%s\n\nQuestions or Comments:\n     djpeirano@gmail.com, dyeap@ucdavis.edu, cedavis@ucdavis.edu', strDisplay);
+        strDisplay = sprintf('%s\n\nQuestions or Comments:\n     djpeirano@gmail.com, dyeap@ucdavis.edu', strDisplay);
         strDisplay = sprintf('%s\n\n%s', strDisplay, strCopyright);
-        strDisplay = sprintf('%s\n\nPublications using this software must reference:\n1. Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications. International Journal for Ion Mobility Spectrometry 19(2): 155-166. DOI: 10.1007/s12127-016-0200-9.\n2. Yeap, D., Hichwa, P. T., Rajapakse, M. Y., Peirano, D. J., McCartney, M. M., Kenyon, N. J., & Davis, C. E. (2019). Machine Vision Methods, Natural Language Processing, and Machine Learning Algorithms for Automated Dispersion Plot Analysis and Chemical Identification from Complex Mixtures. Analytical chemistry, 91(16), 10509-10517.', strDisplay);
+        strDisplay = sprintf('%s\n\nPublications using this software must reference:\n     Peirano DJ, Pasamontes A, Davis CE*. (2016) Supervised semi-automated data analysis software for gas chromatography / differential mobility spectrometry (GC/DMS) metabolomics applications. International Journal for Ion Mobility Spectrometry 19(2): 155-166. DOI: 10.1007/s12127-016-0200-9', strDisplay);
         
         funcToast(strDisplay, sprintf('About %s', strSoftwareName), 'help');
     end
@@ -781,9 +781,385 @@ tabPreprocessing = uitab(tabGroupMain, 'Title', 'Preprocessing');
 tabModel = uitab(tabGroupMain, 'Title', 'Model');
 tabPrediction = uitab(tabGroupMain, 'Title', 'Prediction');
 
-%%%%%%
+tabMultiModels = uitab(tabGroupMain, 'Title', 'DMS: ML models');
+
+
+
+% Button and function that calls Naive Bayes Classfier
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('Naive Bayes Classifier Train'),...
+    'Position',[.1 .85 .2 .05],...
+    ...
+    'Callback',{@naivebayesclassifiertrain});
+    function naivebayesclassifiertrain(~,~)
+        exportVariablesToWorkspace_Callback();
+        X_naive = [];
+        y_naive = [];
+        save cellDatatrain.mat cellData
+        save cellPlaylisttrain.mat cellPlaylist
+        
+        cellPlaylist_size=size(cellPlaylist);
+        Nsamples = cellPlaylist_size(1,1);
+        
+        for iiii = 1:1:Nsamples
+            xdata_naive = cellData{iiii,3};
+            xdata_naive = reshape(xdata_naive',1,[]);
+            X_naive = [X_naive;xdata_naive];
+            y_naive = [y_naive;str2num(cellPlaylist{iiii,4})]; % cellPlaylist{iiii,4}   
+        end
+            assignin('base','X_naive',X_naive);
+            assignin('base','y_naive',y_naive);  
+        
+            cv_naive = cvpartition(size(X_naive,1),'HoldOut',0.1);
+            idx_naive = cv_naive.test;
+            
+            X_train_naive = X_naive(~idx_naive,:);
+            X_val_naive = X_naive(idx_naive,:);
+            Y_train_naive = y_naive(~idx_naive,:);
+            Y_val_naive = y_naive(idx_naive,:);
+            
+            assignin('base','X_val_naive',X_val_naive);
+            assignin('base','Y_val_naive',Y_val_naive);
+            
+            model_naive = fitcnb(X_train_naive, Y_train_naive);
+            
+            Y_prediction_naive = predict(model_naive,X_val_naive);
+        
+            assignin('base','model_naive',model_naive);
+            
+            save model_naive1.mat model_naive
+        % save workspace for spline and call spline window 
+%         evalin('base', 'save(''spline_init_data.mat'')');
+%         disp('working')
+%         DPA_callback();
+%         disp(cellPlaylist{1,4})
+    end
+
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('Naive Bayes Classifier Test'),...
+    'Position',[.1 0.80 .2 .05],...
+    ...
+    'Callback',{@naivebayesclassifiertest});
+    function naivebayesclassifiertest(~,~)
+          exportVariablesToWorkspace_Callback();
+          prebuiltmodel_naive  = load('model_naive1.mat');
+%           
+          X_naive_test = [];
+          y_naive_test = [];
+          cellPlaylist_test_size=size(cellPlaylist);
+          Nsamples_test = cellPlaylist_test_size(1,1);
+          
+          disp(cellData)
+          
+        for iiiii = 1:1:Nsamples_test
+            xdata_naive = cellData{iiiii,3};
+            xdata_naive = reshape(xdata_naive',1,[]);
+            X_naive_test = [X_naive_test;xdata_naive];
+%             y_naive_test = [y_naive_test;str2num(cellPlaylist{iiiii,4})]; % cellPlaylist{iiii,4}   
+        end
+%                 [Y_prediction_svm,scores] = predict(prebuiltmodel_svm.model_svm,X_svm_test);
+%         assignin('base','scores',scores);
+        Y_prediction_naive = predict(prebuiltmodel_naive.model_naive,X_naive_test);
+        [Y_prediction_naive, scores] = predict(prebuiltmodel_naive.model_naive,X_naive_test);
+        assignin('base','scores',scores);
+        
+        allresults_naive = {};
+        for iiiii = 1:1:Nsamples_test
+        allresults_naive{iiiii,1} = cellPlaylist{iiiii,2};
+        allresults_naive{iiiii,2} = Y_prediction_naive(iiiii,1);
+        end
+        
+%         assignin('base','allresults_naive',allresults_naive);
+%         uitable('Data',allresults_naive)
+        
+        fig = uifigure('Name','Naive Bayes Classification results'); % 'Name','Plotted Results'
+        
+%         title('titletext')
+        uit = uitable(fig,'Data',allresults_naive,'ColumnName', {'File Name', 'Class'},'units','normalized','Position',[0.25 0.25 0.5 0.5]);
+        
+%         msg = sprintf('Concentration in file: %s is %f', cellPlaylist{iiiii,2}, Y_prediction_naive(iiiii,1));
+%         h = msgbox(msg)
+%         Myresult(:,1) = 
+          
+%         % save workspace for spline and call spline window 
+%         evalin('base', 'save(''spline_init_data.mat'')');
+%         disp('working')
+%         DPA_callback();
+%         disp('working')
+%         disp(cellClassifications)
+    end 
 
 %%%%%%
+% Button and function that calls svm  Classfier
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('SVM Classifier Train'),...
+    'Position',[.1 .70 .2 .05],...
+    ...
+    'Callback',{@svmclassifiertrain});
+    function svmclassifiertrain(~,~)
+        exportVariablesToWorkspace_Callback();
+        X_svm = [];
+        y_svm = [];
+        save cellDatatrain.mat cellData
+        save cellPlaylisttrain.mat cellPlaylist
+        cellPlaylist_size=size(cellPlaylist);
+        Nsamples = cellPlaylist_size(1,1);
+        for iiii = 1:1:Nsamples
+            xdata_svm = cellData{iiii,3};
+            xdata_svm = reshape(xdata_svm',1,[]);
+            X_svm = [X_svm;xdata_svm];
+            y_svm = [y_svm;str2num(cellPlaylist{iiii,4})]; % cellPlaylist{iiii,4}   
+        end
+            assignin('base','X_svm',X_svm);
+            assignin('base','y_svm',y_svm);
+            rng('shuffle')
+            cv_svm = cvpartition(size(X_svm,1),'HoldOut',0.25);
+            idx_svm = cv_svm.test;
+            X_train_svm = X_svm(~idx_svm,:);
+            X_val_svm = X_svm(idx_svm,:);
+            Y_train_svm = y_svm(~idx_svm,:);
+            Y_val_svm = y_svm(idx_svm,:);
+            assignin('base','X_val_svm',X_val_svm);
+            assignin('base','Y_val_svm',Y_val_svm);
+            model_svm = fitcecoc(X_train_svm, Y_train_svm);
+            
+            [Mdl,HyperparameterOptimizationResults] = fitcecoc(X_train_svm,Y_train_svm)
+            disp('working');
+            
+            
+            Y_prediction_svm = predict(model_svm,X_val_svm);       
+            assignin('base','model_svm',model_svm);      
+            save model_svm1.mat model_svm
+    end
+
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('SVM Classifier Test'),...
+    'Position',[.1 0.65 .2 .05],...
+    ...
+    'Callback',{@svmclassifiertest});
+    function svmclassifiertest(~,~)
+          exportVariablesToWorkspace_Callback();
+          prebuiltmodel_svm  = load('model_svm1.mat');
+          X_svm_test = [];
+          y_svm_test = [];
+          cellPlaylist_test_size=size(cellPlaylist);
+          Nsamples_test = cellPlaylist_test_size(1,1);
+          disp(cellData)
+        for iiiii = 1:1:Nsamples_test
+            xdata_svm = cellData{iiiii,3};
+            xdata_svm = reshape(xdata_svm',1,[]);
+            X_svm_test = [X_svm_test;xdata_svm];
+        end
+        [Y_prediction_svm,scores] = predict(prebuiltmodel_svm.model_svm,X_svm_test);
+        assignin('base','scores',scores);
+        Y_prediction_svm = predict(prebuiltmodel_svm.model_svm,X_svm_test);
+        allresults_svm = {};
+        for iiiii = 1:1:Nsamples_test
+        allresults_svm{iiiii,1} = cellPlaylist{iiiii,2};
+        allresults_svm{iiiii,2} = Y_prediction_svm(iiiii,1);
+        end
+        fig = uifigure('Name','SVM Classification results');
+        uit = uitable(fig,'Data',allresults_svm,'ColumnName', {'File Name', 'Class'},'units','normalized','Position',[0.25 0.25 0.5 0.5]);
+    end 
+%%%%%%
+
+
+% Button and function that calls CNN  Classfier
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('CNN Classifier Train'),...
+    'Position',[.1 .55 .2 .05],...
+    ...
+    'Callback',{@CNNclassifiertrain});
+    function CNNclassifiertrain(~,~)
+        exportVariablesToWorkspace_Callback(); 
+        X_CNN = [];
+        y_CNN = [];
+        save cellDatatrain.mat cellData
+        save cellPlaylisttrain.mat cellPlaylist
+        cellPlaylist_size=size(cellPlaylist);
+        Nsamples = cellPlaylist_size(1,1);
+        for iiii = 1:1:Nsamples
+            X_CNN(:,:,:,iiii) = cellData{iiii, 3};
+            y_CNN = [y_CNN;cellPlaylist{iiii,4}]; % cellPlaylist{iiii,4}   
+        end     
+            y_CNN = cellstr(y_CNN);
+            y_CNN =  categorical(y_CNN);
+            uniqueclasses = size(unique(y_CNN));
+            Num_classes = uniqueclasses(1,1); 
+            assignin('base','X_CNN',X_CNN);
+            assignin('base','y_CNN',y_CNN);
+            rng('shuffle');
+            cv_CNN = cvpartition(size(X_CNN,4),'HoldOut',0.25);
+            idx_CNN = cv_CNN.test;
+            
+            X_train_CNN = X_CNN(:,:,:,~idx_CNN); %:,:,:,iiii
+            X_val_CNN = X_CNN(:,:,:,idx_CNN);
+            
+            Y_train_CNN = y_CNN(~idx_CNN,:);
+            Y_val_CNN = y_CNN(idx_CNN,:);
+
+
+            assignin('base','X_val_CNN',X_val_CNN);
+            assignin('base','Y_val_CNN',Y_val_CNN);
+
+            
+            model_CNN = cnntrainfunction(X_train_CNN, Y_train_CNN,X_val_CNN,Y_val_CNN,Num_classes);
+            Y_prediction_CNN = predict(model_CNN,X_val_CNN);
+            assignin('base','Y_prediction_CNN',Y_prediction_CNN);
+            assignin('base','model_CNN',model_CNN);      
+            save model_CNN_EA_2.mat model_CNN
+    end
+
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('CNN Classifier Test'),...
+    'Position',[.1 0.5 .2 .05],...
+    ...
+    'Callback',{@CNNclassifiertest});
+    function CNNclassifiertest(~,~)
+          exportVariablesToWorkspace_Callback();
+          prebuiltmodel_CNN  = load('model_CNN_EA_2.mat');
+          X_CNN_test = [];
+          y_CNN_test = [];
+          cellPlaylist_test_size=size(cellPlaylist);
+          Nsamples_test = cellPlaylist_test_size(1,1);
+          disp(cellData)
+        for iiiii = 1:1:Nsamples_test
+            X_CNN_test(:,:,:,iiiii) = cellData{iiiii, 3};
+            y_CNN_test = [y_CNN_test;cellPlaylist{iiiii,4}]; % cellPlaylist{iiii,4}   
+%             xdata_CNN = cellData{iiiii,3};
+%             xdata_CNN = reshape(xdata_CNN',1,[]);
+%             X_CNN_test = [X_CNN_test;xdata_CNN];
+        end
+        Y_prediction_CNN = predict(prebuiltmodel_CNN.model_CNN,X_CNN_test);
+        
+        assignin('base','scores',Y_prediction_CNN); 
+        Y_prediction_CNN2 = Y_prediction_CNN;
+        
+        % [Y_prediction_svm,scores] = predict(prebuiltmodel_svm.model_svm,X_svm_test);
+        
+        
+        allresults_CNN = {};
+        for iiiii = 1:1:Nsamples_test
+        allresults_CNN{iiiii,1} = cellPlaylist{iiiii,2};
+        [prediction_prob, prediction_index] = max(Y_prediction_CNN(iiiii,:))
+        allresults_CNN{iiiii,2} = prediction_index;
+        end
+        fig = uifigure('Name','CNN Classification results');
+        uit = uitable(fig,'Data',allresults_CNN,'ColumnName', {'File Name', 'Class'},'units','normalized','Position',[0.25 0.25 0.5 0.5]);
+    end 
+
+
+
+
+% Button and function that calls pcaknn Bayes Classfier
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('PCA + KNN Classifier Train'),...
+    'Position',[.1 .4 .2 .05],...
+    ...
+    'Callback',{@pcaknnbayesclassifiertrain});
+    function pcaknnbayesclassifiertrain(~,~)
+        exportVariablesToWorkspace_Callback();
+        X_pcaknn = [];
+        y_pcaknn = [];
+        save cellDatatrain.mat cellData
+        save cellPlaylisttrain.mat cellPlaylist
+        
+        cellPlaylist_size=size(cellPlaylist);
+        Nsamples = cellPlaylist_size(1,1);
+        
+        for iiii = 1:1:Nsamples
+            xdata_pcaknn = cellData{iiii,3};
+            xdata_pcaknn = xdata_pcaknn(1:1700,1:100);
+            disp(size(xdata_pcaknn))
+            xdata_pcaknn = reshape(xdata_pcaknn',1,[]);
+            X_pcaknn = [X_pcaknn;xdata_pcaknn];
+            y_pcaknn = [y_pcaknn;str2num(cellPlaylist{iiii,4})]; % cellPlaylist{iiii,4}   
+        end
+            assignin('base','X_pcaknn',X_pcaknn);
+            assignin('base','y_pcaknn',y_pcaknn);  
+        
+            cv_pcaknn = cvpartition(size(X_pcaknn,1),'HoldOut',0.05);
+            idx_pcaknn = cv_pcaknn.test;
+            
+            X_train_pcaknn = X_pcaknn(~idx_pcaknn,:);
+            X_val_pcaknn = X_pcaknn(idx_pcaknn,:);
+            Y_train_pcaknn = y_pcaknn(~idx_pcaknn,:);
+            Y_val_pcaknn = y_pcaknn(idx_pcaknn,:);
+            
+            assignin('base','X_val_pcaknn',X_val_pcaknn);
+            assignin('base','Y_val_pcaknn',Y_val_pcaknn);
+            ncomp = 5;
+                options = pca('options');
+                options.dsiplay = 'off';
+                options.plots = 'none';
+            model_pcaknn = pca(X_train_pcaknn,ncomp,options);% fitcnb(X_train_pcaknn, Y_train_pcaknn); % pca(X_train,ncomp,options);
+            assignin('base','model_pcaknn',model_pcaknn);
+            
+            
+            Md_KNN = fitcknn(model_pcaknn.loads{1,1},Y_train_pcaknn,'NumNeighbors',5,'Standardize',1);
+            
+            save model_pcaknn1.mat model_pcaknn
+            save Md_KNN1.mat Md_KNN
+
+    end
+
+
+
+uicontrol(tabMultiModels, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('pcaknn Bayes Classifier Test'),...
+    'Position',[.1 0.35 .2 .05],...
+    ...
+    'Callback',{@pcaknnbayesclassifiertest});
+    function pcaknnbayesclassifiertest(~,~)
+          exportVariablesToWorkspace_Callback();
+          prebuiltmodel_pcaknn  = load('model_pcaknn1.mat');
+          prebuiltmodel_pcaknn2  = load('Md_KNN1.mat');
+          X_pcaknn_test = [];
+          y_pcaknn_test = [];
+          cellPlaylist_test_size=size(cellPlaylist);
+          Nsamples_test = cellPlaylist_test_size(1,1);
+          
+          disp(cellData)
+          
+        for iiiii = 1:1:Nsamples_test
+            xdata_pcaknn = cellData{iiiii,3};
+            xdata_pcaknn = reshape(xdata_pcaknn',1,[]);
+            X_pcaknn_test = [X_pcaknn_test;xdata_pcaknn];
+ 
+        end
+        
+        pred    = pca(X_pcaknn_test,prebuiltmodel_pcaknn.model_pcaknn);
+%         Mdl = fitcknn(pcamodel.loads{1,1},Y_train,'NumNeighbors',5,'Standardize',1);
+        
+        Y_prediction_pcaknn = predict(prebuiltmodel_pcaknn2.Md_KNN,pred.loads{1,1}); % predict(prebuiltmodel_pcaknn.model_pcaknn,X_pcaknn_test);
+        [Y_prediction_pcaknn, scores] = predict(prebuiltmodel_pcaknn2.Md_KNN,pred.loads{1,1})
+        assignin('base','scores',scores);
+        
+        allresults_pcaknn = {};
+        for iiiii = 1:1:Nsamples_test
+        allresults_pcaknn{iiiii,1} = cellPlaylist{iiiii,2};
+        allresults_pcaknn{iiiii,2} = Y_prediction_pcaknn(iiiii,1);
+        end
+        
+
+        
+        fig = uifigure('Name','pcaknn Bayes Classification results'); % 'Name','Plotted Results'
+
+        uit = uitable(fig,'Data',allresults_pcaknn,'ColumnName', {'File Name', 'Class'},'units','normalized','Position',[0.25 0.25 0.5 0.5]);
+        
+
+    end 
+
+
+
 
 
 
@@ -824,7 +1200,7 @@ uicontrol(tabSamples, 'Style','pushbutton',...
         vecSortColumns = [0, 0, 1, 0];
         boolEmptyPlot = true;
 
-        strSoftwareName = 'AIMS, Version 1.301';
+        strSoftwareName = 'AIMS, Version 1.40';
 
         ptrPreviousToast = -1;
 
@@ -972,10 +1348,10 @@ uicontrol(tabSamples, 'Style','pushbutton',...
             'Position',[.495 .72 .05 .03 ], 'Callback',{@editRTMinPos});    
         
         function buttWorkspaceAddVariables(~,~)
-            valCVLow = str2double(get(valCVWorkspaceMin, 'string'));
-            valCVHigh = str2double(get(valCVWorkspaceMax, 'string'));
-            valRTLow = str2double(get(valRTWorkspaceMin, 'string'));
-            valRTHigh = str2double(get(valRTWorkspaceMax, 'string'));
+            valCVLow = str2double(get(valCVWorkspaceMin, 'string'))
+            valCVHigh = str2double(get(valCVWorkspaceMax, 'string'))
+            valRTLow = str2double(get(valRTWorkspaceMin, 'string'))
+            valRTHigh = str2double(get(valRTWorkspaceMax, 'string'))
             
             vecBoolFinalWorkspaceVariables(vecBoolInitialWorkspaceVariables) = false;
             cellAddVariables = cellCurrWorkspaceNames(vecBoolFinalWorkspaceVariables);
@@ -983,8 +1359,8 @@ uicontrol(tabSamples, 'Style','pushbutton',...
                 return
             end
             
-            cellTempData = cell(size(cellAddVariables,1), 4);
-            cellAddFiles = cell(size(cellAddVariables,1), 3);
+            cellTempData = cell(size(cellAddVariables,1), 4)
+            cellAddFiles = cell(size(cellAddVariables,1), 3)
             for i=1:size(cellTempData,1)
                 matTemp = evalin('base', cellAddVariables{i});
                 
@@ -1826,6 +2202,16 @@ uicontrol(tabModel, 'Style','text',...
     'Units', 'normalized',  'HorizontalAlignment', 'left',...
     'Position',[0 .1 1 .09 ]);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Multi Model (SVM+NaiveBayes+KNN+CNN) Tab
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%General Notes
+uicontrol(tabMultiModels, 'Style','text',...
+    'String','Select which form of analysis you prefer (only nPLS available at the moment) and the settings of the analysis.  Also select the breakdown of training and validation below.  Leave One Out can be MUCH slower than choosing percentages of training and testing.',...
+    'Units', 'normalized',  'HorizontalAlignment', 'left',...
+    'Position',[0 .9 1 .09 ]);
+
     
 
 
@@ -2072,7 +2458,7 @@ uicontrol(tabModel, 'Style','pushbutton',...
             min_rt = str2double(get(valRTMinPos, 'String'))
             max_rt = str2double(get(valRTMaxPos, 'String'))
             min_cv = str2double(get(valCVMinPos, 'String'))
-            max_cv =str2double(get(valCVMaxPos, 'String'))
+            max_cv = str2double(get(valCVMaxPos, 'String'))
             
             % This is used to valid size
             [cubeXPos_cell_model, ~, ~] = funcCellToCube(cellCurr, min_cv, max_cv,...
@@ -2105,15 +2491,39 @@ uicontrol(tabModel, 'Style','text',...
 uicontrol(tabModel, 'Style','pushbutton',...
     'Units', 'normalized',...
     'String',sprintf('Spline'),...
-    'Position',[.33 .22 .1 .05],...
+    'Position',[.3 .22 .1 .05],...
     ...
     'Callback',{@spline_Callback});
     function spline_Callback(~,~)
         exportVariablesToWorkspace_Callback();
         % save workspace for spline and call spline window 
         evalin('base', 'save(''spline_init_data.mat'')');
+        disp('working')
         DPA_callback();
+        disp('working')
     end 
+
+% Button and function that calls Peak Detection
+uicontrol(tabModel, 'Style','text',...
+    'String','2. Peak Detection can only be used for GC/DMS plots to provide prediciton models. Preprocessing must be performed on the datasets.',...
+    'Units', 'normalized',  'HorizontalAlignment', 'left',...
+    'Position',[.45 .22 .3 .07 ])
+uicontrol(tabModel, 'Style','pushbutton',...
+    'Units', 'normalized',...
+    'String',sprintf('Peak Detection'),...
+    'Position',[.75 .22 .2 .05],...
+    ...
+    'Callback',{@Peak_Detection_Callback});
+    function Peak_Detection_Callback(~,~)
+        exportVariablesToWorkspace_Callback();
+        % save workspace for Peak Detection and call spline window 
+        evalin('base', 'save(''peak_detection_init_data.mat'')');
+        PredictGCDMS();
+    end 
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Prediction Tab
@@ -2767,9 +3177,9 @@ panelPredictionClassificationInfo = uipanel(tabPrediction,...
             valMinRT = str2double(get(valRTSampleScannerMin, 'String'));
             valMaxRT = str2double(get(valRTSampleScannerMax, 'String'));
             
-            indxMinCV = find(currData{1}>valMinCV, 1, 'first');
-            indxMaxCV = find(currData{1}<valMaxCV, 1, 'last');
-            indxMinRT = find(currData{2}>valMinRT, 1, 'first');
+            indxMinCV = find(currData{1}>valMinCV, 1, 'first')
+            indxMaxCV = find(currData{1}<valMaxCV, 1, 'last')
+            indxMinRT = find(currData{2}>valMinRT, 1, 'first')
             indxMaxRT = find(currData{2}<valMaxRT, 1, 'last');
             
             if isempty(indxMinCV) || isempty(indxMaxCV)...
@@ -2791,9 +3201,9 @@ panelPredictionClassificationInfo = uipanel(tabPrediction,...
             end
 
             %Set CV and RT Limits
-            currData{1} = currData{1}(indxMinCV:indxMaxCV);
-            currData{2} = currData{2}(indxMinRT:indxMaxRT);
-            currData{3} = currData{3}(indxMinRT:indxMaxRT, indxMinCV:indxMaxCV);
+            currData{1} = currData{1}(indxMinCV:indxMaxCV)
+            currData{2} = currData{2}(indxMinRT:indxMaxRT)
+            currData{3} = currData{3}(indxMinRT:indxMaxRT, indxMinCV:indxMaxCV)
 
 
             %Set Z Limits
@@ -3595,12 +4005,24 @@ function funcRefreshPlaylist()
         end
         
         
+        %-------------------------------------%
+        %-------------------------------------%
+        
+        
+        
+        
+        
+        
         if boolEmptyPlot
             surf(currData{1}, currData{2}, currData{3});
+            %figure
+            %a =1:1:100;
+            %allplots(a);
         else
             [az, el] = view;
             surf(currData{1}, currData{2}, currData{3});
             view(az, el);
+            %figure
         end
             
         shading interp
@@ -3726,7 +4148,7 @@ end
 % AnalyzeIMS is the proprietary property of The Regents of the University
 % of California (“The Regents.”) 
 % 
-% Copyright © 2014-21 The Regents of the University of California, Davis
+% Copyright © 2014-20 The Regents of the University of California, Davis
 % campus. All Rights Reserved. 
 %
 % This material is available as open source for research and personal use 
@@ -3770,24 +4192,3 @@ end
 % signatory of both parties.
 % 
 % For commercial license information please contact copyright@ucdavis.edu.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
