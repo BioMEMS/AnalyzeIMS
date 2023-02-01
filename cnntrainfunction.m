@@ -1,4 +1,4 @@
-function CNN_model = cnntrainfunction(X_train_CNN, Y_train_CNN, X_val_CNN,Y_val_CNN,Num_classes)
+function CNN_model = cnntrainfunction(X_train_CNN, Y_train_CNN, X_val_CNN,Y_val_CNN,Num_classes) % check
 
 
     layers = [
