@@ -2,7 +2,7 @@ function CNN_model = cnntrainfunction(X_train_CNN, Y_train_CNN, X_val_CNN,Y_val_
 
 
     layers = [
-    imageInputLayer([100 100 1])
+    imageInputLayer([size(X_train_CNN(:,:,:,1),1) size(X_train_CNN(:,:,:,1),2) 1])
     convolution2dLayer(3,8,'Padding','same')
     batchNormalizationLayer
     reluLayer

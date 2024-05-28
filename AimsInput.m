@@ -232,13 +232,15 @@ classdef AimsInput
             % For the non-overlap just use the peak cv and rt as the 
             % For over-lap take the average of the peak cv and rt. should
             % be used.
-            [~,unique_index,~] = unique(s1_s2_overlap(:,2));
-            dup_index = setdiff((1:size(s1_s2_overlap, 1))', unique_index);
-            dup_val = s1_s2_overlap(dup_index,:);
-            % may have multiple duplicate values
-            dup_val = unique(dup_val(:,2));
-            non_overlap_filter = ~ismember(s1_s2_overlap(:,2),dup_val);
-            s1_s2_overlap = s1_s2_overlap(non_overlap_filter,:);
+            if ~isempty(s1_s2_overlap)
+                [~,unique_index,~] = unique(s1_s2_overlap(:,2));
+                dup_index = setdiff((1:size(s1_s2_overlap, 1))', unique_index);
+                dup_val = s1_s2_overlap(dup_index,:);
+                % may have multiple duplicate values
+                dup_val = unique(dup_val(:,2));
+                non_overlap_filter = ~ismember(s1_s2_overlap(:,2),dup_val);
+                s1_s2_overlap = s1_s2_overlap(non_overlap_filter,:);
+            end
             
             % Construct the peak table. The columns needs to store the max
             % cv/rt coordinates. For the overlap take th average between
@@ -250,11 +252,19 @@ classdef AimsInput
                 peak_table_cv_rt = [peak_table_cv_rt;peak_avg_cv_rt];
             end
             
-            s1_non_overlap_index = ~ismember(s1(:,1),s1_s2_overlap(:,1));
+            if ~isempty(s1_s2_overlap)
+                s1_non_overlap_index = ~ismember(s1(:,1),s1_s2_overlap(:,1));
+            else
+                s1_non_overlap_index = s1(:,1);
+            end
             s1_cv_rt = s1(s1_non_overlap_index,2:3);
             peak_table_cv_rt = [peak_table_cv_rt;s1_cv_rt];
             
-            s2_non_overlap_index = ~ismember(s2(:,1),s1_s2_overlap(:,2));
+            if ~isempty(s1_s2_overlap)
+                s2_non_overlap_index = ~ismember(s2(:,1),s1_s2_overlap(:,2));
+            else
+                s2_non_overlap_index = s2(:,1);
+            end
             s2_cv_rt = s2(s2_non_overlap_index,2:3);
             peak_table_cv_rt = [peak_table_cv_rt;s2_cv_rt];
             

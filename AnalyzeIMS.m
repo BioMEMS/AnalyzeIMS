@@ -796,6 +796,9 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
         exportVariablesToWorkspace_Callback();
         X_naive = [];
         y_naive = [];
+        nrows = [];
+        ncols = [];
+        [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
         save cellDatatrain.mat cellData
         save cellPlaylisttrain.mat cellPlaylist
         
@@ -804,6 +807,7 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
         
         for iiii = 1:1:Nsamples
             xdata_naive = cellData{iiii,3};
+            xdata_naive = xdata_naive(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
             xdata_naive = reshape(xdata_naive',1,[]);
             X_naive = [X_naive;xdata_naive];
             y_naive = [y_naive;str2num(cellPlaylist{iiii,4})]; % cellPlaylist{iiii,4}   
@@ -848,6 +852,9 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
 %           
           X_naive_test = [];
           y_naive_test = [];
+          nrows = [];
+          ncols = [];
+          [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
           cellPlaylist_test_size=size(cellPlaylist);
           Nsamples_test = cellPlaylist_test_size(1,1);
           
@@ -855,6 +862,7 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
           
         for iiiii = 1:1:Nsamples_test
             xdata_naive = cellData{iiiii,3};
+            xdata_naive = xdata_naive(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
             xdata_naive = reshape(xdata_naive',1,[]);
             X_naive_test = [X_naive_test;xdata_naive];
 %             y_naive_test = [y_naive_test;str2num(cellPlaylist{iiiii,4})]; % cellPlaylist{iiii,4}   
@@ -903,12 +911,16 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
         exportVariablesToWorkspace_Callback();
         X_svm = [];
         y_svm = [];
+        nrows = [];
+        ncols = [];
+        [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
         save cellDatatrain.mat cellData
         save cellPlaylisttrain.mat cellPlaylist
         cellPlaylist_size=size(cellPlaylist);
         Nsamples = cellPlaylist_size(1,1);
         for iiii = 1:1:Nsamples
             xdata_svm = cellData{iiii,3};
+            xdata_svm = xdata_svm(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
             xdata_svm = reshape(xdata_svm',1,[]);
             X_svm = [X_svm;xdata_svm];
             y_svm = [y_svm;str2num(cellPlaylist{iiii,4})]; % cellPlaylist{iiii,4}   
@@ -946,11 +958,15 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
           prebuiltmodel_svm  = load('model_svm1.mat');
           X_svm_test = [];
           y_svm_test = [];
+          nrows = [];
+          ncols = [];
+          [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
           cellPlaylist_test_size=size(cellPlaylist);
           Nsamples_test = cellPlaylist_test_size(1,1);
           disp(cellData)
         for iiiii = 1:1:Nsamples_test
             xdata_svm = cellData{iiiii,3};
+            xdata_svm = xdata_svm(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
             xdata_svm = reshape(xdata_svm',1,[]);
             X_svm_test = [X_svm_test;xdata_svm];
         end
@@ -979,12 +995,17 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
         exportVariablesToWorkspace_Callback(); 
         X_CNN = [];
         y_CNN = [];
+        nrows = [];
+        ncols = [];
+        [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
         save cellDatatrain.mat cellData
         save cellPlaylisttrain.mat cellPlaylist
         cellPlaylist_size=size(cellPlaylist);
         Nsamples = cellPlaylist_size(1,1);
         for iiii = 1:1:Nsamples
-            X_CNN(:,:,:,iiii) = cellData{iiii, 3};
+            xdata_cnn = cellData{iiii, 3};
+            xdata_cnn = xdata_cnn(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
+            X_CNN(:,:,:,iiii) = xdata_cnn;
             y_CNN = [y_CNN;cellPlaylist{iiii,4}]; % cellPlaylist{iiii,4}   
         end     
             y_CNN = cellstr(y_CNN);
@@ -1026,11 +1047,16 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
           prebuiltmodel_CNN  = load('model_CNN_EA_2.mat');
           X_CNN_test = [];
           y_CNN_test = [];
+          nrows = [];
+          ncols = [];
+          [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
           cellPlaylist_test_size=size(cellPlaylist);
           Nsamples_test = cellPlaylist_test_size(1,1);
           disp(cellData)
         for iiiii = 1:1:Nsamples_test
-            X_CNN_test(:,:,:,iiiii) = cellData{iiiii, 3};
+            xdata_cnn = cellData{iiii, 3};
+            xdata_cnn = xdata_cnn(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
+            X_CNN(:,:,:,iiii) = xdata_cnn;
             y_CNN_test = [y_CNN_test;cellPlaylist{iiiii,4}]; % cellPlaylist{iiii,4}   
 %             xdata_CNN = cellData{iiiii,3};
 %             xdata_CNN = reshape(xdata_CNN',1,[]);
@@ -1068,6 +1094,9 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
         exportVariablesToWorkspace_Callback();
         X_pcaknn = [];
         y_pcaknn = [];
+        nrows = [];
+        ncols = [];
+        [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
         save cellDatatrain.mat cellData
         save cellPlaylisttrain.mat cellPlaylist
         
@@ -1076,7 +1105,7 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
         
         for iiii = 1:1:Nsamples
             xdata_pcaknn = cellData{iiii,3};
-            xdata_pcaknn = xdata_pcaknn(1:1700,1:100);
+            xdata_pcaknn = xdata_pcaknn(1:min(cell2mat(nrows)),:); %reshaping data to size of minimum file length so data have same dimensions. There might be a better way to do this
             disp(size(xdata_pcaknn))
             xdata_pcaknn = reshape(xdata_pcaknn',1,[]);
             X_pcaknn = [X_pcaknn;xdata_pcaknn];
@@ -1085,7 +1114,7 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
             assignin('base','X_pcaknn',X_pcaknn);
             assignin('base','y_pcaknn',y_pcaknn);  
         
-            cv_pcaknn = cvpartition(size(X_pcaknn,1),'HoldOut',0.05);
+            cv_pcaknn = cvpartition(size(X_pcaknn,1),'HoldOut',0.1);
             idx_pcaknn = cv_pcaknn.test;
             
             X_train_pcaknn = X_pcaknn(~idx_pcaknn,:);
@@ -1096,17 +1125,17 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
             assignin('base','X_val_pcaknn',X_val_pcaknn);
             assignin('base','Y_val_pcaknn',Y_val_pcaknn);
             ncomp = 5;
-                options = pca('options');
-                options.dsiplay = 'off';
-                options.plots = 'none';
-            model_pcaknn = pca(X_train_pcaknn,ncomp,options);% fitcnb(X_train_pcaknn, Y_train_pcaknn); % pca(X_train,ncomp,options);
+                %options = pca('options');
+                %options.dsiplay = 'off';
+                %options.plots = 'none';
+            model_pcaknn = pca(X_train_pcaknn, 'Algorithm', 'als', 'NumComponents', ncomp);% fitcnb(X_train_pcaknn, Y_train_pcaknn); % pca(X_train,ncomp,options);
             assignin('base','model_pcaknn',model_pcaknn);
             
             
-            Md_KNN = fitcknn(model_pcaknn.loads{1,1},Y_train_pcaknn,'NumNeighbors',5,'Standardize',1);
+            Md_KNN = fitcknn(model_pcaknn,Y_train_pcaknn,'NumNeighbors',5,'Standardize',1);
             
             save model_pcaknn1.mat model_pcaknn
-            save Md_KNN1.mat Md_KNN
+            %save Md_KNN1.mat Md_KNN
 
     end
 
@@ -1124,6 +1153,9 @@ uicontrol(tabMultiModels, 'Style','pushbutton',...
           prebuiltmodel_pcaknn2  = load('Md_KNN1.mat');
           X_pcaknn_test = [];
           y_pcaknn_test = [];
+          nrows = [];
+          ncols = [];
+          [nrows, ncols] = cellfun(@size, cellData(:,3), 'UniformOutput', false);
           cellPlaylist_test_size=size(cellPlaylist);
           Nsamples_test = cellPlaylist_test_size(1,1);
           
@@ -1686,7 +1718,7 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
             funcRefreshPlaylist;
         end
     end
-    function tableEdit_Callback(~, event)
+    function tableEdit_Callback(src, event)
         vecLoc = event.Indices;
         if vecLoc(2)==1
             matCurrHighlighted = get(objTableMain, 'UserData');
@@ -1711,6 +1743,7 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
             end
             
             set(objTableMain, 'UserData', '');
+            scroll(objTableMain, "row", vecLoc(1))
         end
         
         if vecLoc(2) > length(cellColNames)
@@ -3885,6 +3918,7 @@ function funcRefreshPlaylist()
     
     %Check the sort Vector to see how the data should be organized
     %Consider Automatically saving to "currPlaylist" at this point.
+    
    
 
     %Assume to Sort by Date.
