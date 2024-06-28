@@ -4,7 +4,7 @@ clc;
 
 %%User Input Variables%%
 
-file_loc = 'C:\Users\Reid Honeycutt\Desktop\temp_storage\PF DMS Files';
+file_loc = 'C:\Users\Reid Honeycutt\Desktop\temp_storage\New SensIT Files';
 files = dir(file_loc);
 file_loc_output = fullfile(file_loc, '\\Output_Files');
 output_folder = fullfile(file_loc, '\\Output_Files');
@@ -123,7 +123,7 @@ for file = files'
     fclose(fid_pos);
     fclose(fid_neg);
 end
-
+files_output = dir(file_loc_output);
 for file = files_output'
     
     S1 = file.folder;

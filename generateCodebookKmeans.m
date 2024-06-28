@@ -32,7 +32,7 @@ end
 %	C = k-by-p matrix of k cluster centroid locations
 % 	‘Distance’ type to be determined - need more research on this (sqeulidean, cityblock, cosine, correlation, hamming)
 [clusterAssign_idx, clusterCentroids] = kmeans(featureVector, Kclusters, 'Distance', 'cityblock',...
-                    'Replicates', 10, 'MaxIter', 1000, 'Options', options, 'Display', 'final');
+                    'Replicates', 1, 'MaxIter', 1000, 'Options', options, 'Display', 'final');
 
 
 end

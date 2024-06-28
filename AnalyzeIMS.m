@@ -1743,7 +1743,7 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
             end
             
             set(objTableMain, 'UserData', '');
-            scroll(objTableMain, "row", vecLoc(1))
+            %scroll(objTableMain, "row", vecLoc(1))
         end
         
         if vecLoc(2) > length(cellColNames)
