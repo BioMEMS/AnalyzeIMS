@@ -1,0 +1,121 @@
+import numpy as np
+import torch
+import torch.nn as nn
+from torchvision.transforms import v2
+from pathlib import Path
+import os
+from pytorch_metric_learning.losses import NTXentLoss
+
+
+# load the dataset
+batch_size = 2
+epochs = 1000
+inChannel = 1
+x, y = 800, 80
+#input_img = Input(shape = (x, y, inChannel))
+#enco = Input(shape = (128,))
+#metric_rep = Input(shape = (128,))
+
+num_classes = 2
+
+Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
+
+
+class AE(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        # Building an linear encoder with Linear
+        # layer followed by Relu activation function
+        # 784 ==> 9
+        self.encoder = torch.nn.Sequential(
+            nn.Conv2d(1, 128, 3, padding='same'),
+            nn.Flatten(),
+            nn.Linear(800*80*128, 128),
+            nn.ReLU(),
+        )
+
+        self.projection_head = torch.nn.Sequential(
+            torch.nn.Linear(128, 128),
+            torch.nn.ReLU(),
+        )
+
+        self.linear_probe = torch.nn.Sequential(
+            nn.Linear(128, 1),
+            nn.ReLU(),
+        )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        metric = self.projection_head(encoded)
+        classification = self.linear_probe(metric)
+        return classification
+
+contrast_transforms = v2.Compose([v2.RandomHorizontalFlip(),
+                                          v2.RandomResizedCrop(size=(800,80), scale=(0.8,0.8)),
+                                          #transforms.RandomApply([
+                                          #    transforms.ColorJitter(brightness=0.5,
+                                          #                           contrast=0.5,
+                                          #                           saturation=0.5,
+                                          #                           hue=0.1)
+                                          #], p=0.8),
+                                          #transforms.RandomGrayscale(p=0.2),
+                                          v2.GaussianBlur(kernel_size=9),
+                                          #transforms.ToTensor(),
+                                          #v2.Normalize(mean=(0.1,), std=(0.1,))
+                                         ])
+
+Data_Path = Path(Data_Path)
+Dir_Files = os.listdir(Data_Path)
+Dir_Files = [x for x in Dir_Files if ('Pos.xls' in x)]
+Dir_Files = [Path(str(Data_Path)+'\\'+x) for x in Dir_Files]
+
+file_list = []
+for file in Dir_Files:
+    xls = np.loadtxt(file, dtype=object, delimiter='\t')
+    file_list.append(xls[3:,:])
+    #print('pause')
+window_min = np.max([np.min(x[:,0].astype(float)) for x in file_list])
+window_max = np.min([np.max(x[:,0].astype(float)) for x in file_list])
+Health_Array = np.array([1,0,1,0,1,0,1,0,1,0,1,0,
+                1,0,1,0,1,0,1,0,1,0,1,0])
+#np.logical_and(np.asarray(TEWL_Peak_Starts)>time_ind_start, np.asarray(TEWL_Peak_Starts)<time_ind_end)
+#file_list[0][np.where(np.logical_and(file_list[0][:,0].astype(float)>=window_min, file_list[0][:,0].astype(float)<=window_max))[0],:]
+file_list_cropped = [x[np.where(np.logical_and(x[:,0].astype(float)>=window_min, x[:,0].astype(float)<=window_max))[0],:] for x in file_list]
+shortest_file = np.min([len(x) for x in file_list_cropped])-2
+file_list_double_cropped = [x[:shortest_file,81:] for x in file_list_cropped]
+file_list_double_cropped = [x[200:1000,40:] for x in file_list_double_cropped]
+Image_Array = np.array(file_list_double_cropped).astype('float32').reshape(-1,800,80,1)
+Image_Array = Image_Array/np.max(Image_Array)
+
+train_x = torch.tensor(Image_Array[:12,:,:,:].reshape(-1,800,80))
+train_x_aug = contrast_transforms(train_x)
+test_x = torch.tensor(Image_Array[12:,:,:,:].reshape(-1,800,80))
+test_x_aug = contrast_transforms(test_x)
+train_y = Health_Array[:12]
+test_y = Health_Array[12:]
+
+model = AE()
+
+loss_fn = NTXentLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+n_epochs = 50  # number of epochs to run
+batch_size = 6  # size of each batch
+batches_per_epoch = len(train_x) // batch_size
+
+for epoch in range(n_epochs):
+    for i in range(batches_per_epoch):
+        start = i * batch_size
+        # take a batch
+        Xbatch = train_x[start:start + batch_size]
+        ybatch = train_y[start:start + batch_size]
+        # forward pass
+        y_pred = model(Xbatch.reshape(-1,1,800,80))
+        loss = loss_fn(y_pred, torch.tensor(ybatch))
+        print(loss)
+        # backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        # update weights
+        optimizer.step()
