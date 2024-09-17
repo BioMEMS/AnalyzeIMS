@@ -5,6 +5,9 @@ from torchvision.transforms import v2
 from pathlib import Path
 import os
 from pytorch_metric_learning.losses import NTXentLoss
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib import pyplot as plt
 
 
 # load the dataset
@@ -20,49 +23,72 @@ num_classes = 2
 
 Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
 
-
-class AE(torch.nn.Module):
+class encoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-
-        # Building an linear encoder with Linear
-        # layer followed by Relu activation function
-        # 784 ==> 9
-        self.encoder = torch.nn.Sequential(
+        self.network = torch.nn.Sequential(
             nn.Conv2d(1, 128, 3, padding='same'),
             nn.Flatten(),
             nn.Linear(800*80*128, 128),
             nn.ReLU(),
         )
+    def forward(self, x):
+        encoded = self.network(x)
+        return encoded
 
+class projection_head(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
         self.projection_head = torch.nn.Sequential(
             torch.nn.Linear(128, 128),
             torch.nn.ReLU(),
         )
+    def forward(self, x):
+        metric = self.projection_head(x)
+        return metric
 
+class linear_probe(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
         self.linear_probe = torch.nn.Sequential(
             nn.Linear(128, 1),
             nn.ReLU(),
         )
+    def forward(self, x):
+        classification = self.linear_probe(x)
+        return classification
+
+class contrastive_model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = encoder()
+        self.projection_head = projection_head()
+        self.linear_probe = linear_probe()
 
     def forward(self, x):
         encoded = self.encoder(x)
         metric = self.projection_head(encoded)
-        classification = self.linear_probe(metric)
-        return classification
+        #classification = self.linear_probe(metric)
+        return metric
 
-contrast_transforms = v2.Compose([v2.RandomHorizontalFlip(),
-                                          v2.RandomResizedCrop(size=(800,80), scale=(0.8,0.8)),
+class GrayscaleColorJitter:
+    def __init__(self, brightness=0.5, contrast=0.5):
+        self.color_jitter = v2.ColorJitter(brightness=brightness, contrast=contrast)
+
+    def __call__(self, img):
+        # The ColorJitter can be applied to a grayscale image as well
+        return self.color_jitter(img)
+
+contrast_transforms = v2.Compose([v2.RandomResizedCrop(size=(800,80), scale=(0.9,0.9)),
                                           #transforms.RandomApply([
-                                          #    transforms.ColorJitter(brightness=0.5,
-                                          #                           contrast=0.5,
+                                          v2.ColorJitter(brightness=0.5, contrast=0.5,),
                                           #                           saturation=0.5,
                                           #                           hue=0.1)
                                           #], p=0.8),
                                           #transforms.RandomGrayscale(p=0.2),
                                           v2.GaussianBlur(kernel_size=9),
                                           #transforms.ToTensor(),
-                                          #v2.Normalize(mean=(0.1,), std=(0.1,))
+                                          v2.RandomEqualize(p=1.0)
                                          ])
 
 Data_Path = Path(Data_Path)
@@ -89,33 +115,49 @@ Image_Array = np.array(file_list_double_cropped).astype('float32').reshape(-1,80
 Image_Array = Image_Array/np.max(Image_Array)
 
 train_x = torch.tensor(Image_Array[:12,:,:,:].reshape(-1,800,80))
-train_x_aug = contrast_transforms(train_x)
+#train_x_aug = contrast_transforms(train_x)
 test_x = torch.tensor(Image_Array[12:,:,:,:].reshape(-1,800,80))
-test_x_aug = contrast_transforms(test_x)
+#test_x_aug = contrast_transforms(test_x)
 train_y = Health_Array[:12]
 test_y = Health_Array[12:]
 
-model = AE()
+cont_model = contrastive_model()
 
-loss_fn = NTXentLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+loss_fn = NTXentLoss(temperature=0.10)
+optimizer = torch.optim.Adam(cont_model.parameters(), lr=0.0001)
 
-n_epochs = 50  # number of epochs to run
-batch_size = 6  # size of each batch
+n_epochs = 500  # number of epochs to run
+batch_size = 12  # size of each batch
 batches_per_epoch = len(train_x) // batch_size
 
 for epoch in range(n_epochs):
+    cont_model.train()
+    total_loss = 0
     for i in range(batches_per_epoch):
         start = i * batch_size
         # take a batch
         Xbatch = train_x[start:start + batch_size]
+        Xbatch_aug_1 = contrast_transforms(Xbatch.reshape(-1,1,800,80))
+        Xbatch_aug_2 = contrast_transforms(Xbatch.reshape(-1,1,800,80))
+        #for i, _ in enumerate(Xbatch_aug_1):
+        #   plt.imshow(Xbatch[i, :, :].reshape(800, 80))
+        #   plt.show()
+        #    plt.imshow(Xbatch_aug_2[i, :, :].reshape(800, 80))
+        #    plt.show()
         ybatch = train_y[start:start + batch_size]
+        indices = torch.arange(0, Xbatch_aug_1.size(0))
+        labels = torch.cat([torch.tensor(ybatch), torch.tensor(ybatch)])
+        #labels = torch.cat((indices, indices))
         # forward pass
-        y_pred = model(Xbatch.reshape(-1,1,800,80))
-        loss = loss_fn(y_pred, torch.tensor(ybatch))
+        y_pred_1 = cont_model(Xbatch_aug_1.reshape(-1,1,800,80))
+        y_pred_2 = cont_model(Xbatch_aug_2.reshape(-1, 1, 800, 80))
+        embeddings = torch.cat((y_pred_1, y_pred_2))
+        a = embeddings.detach().numpy().astype(float)
+        loss = loss_fn(embeddings, labels)
         print(loss)
         # backward pass
         optimizer.zero_grad()
         loss.backward()
         # update weights
         optimizer.step()
+print('pause')
