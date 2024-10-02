@@ -4,7 +4,7 @@ clc;
 
 %%User Input Variables%%
 
-file_loc = 'C:\Users\Reid Honeycutt\Desktop\temp_storage\New SensIT Files';
+file_loc = 'C:\Users\Reid Honeycutt\Box\2_BIOMEMS SHARED FOLDERS\02_projects\NIH U01 SCENT II\uPC-GC-DMS-data\2024-09-27\Output_Files';
 files = dir(file_loc);
 file_loc_output = fullfile(file_loc, '\\Output_Files');
 output_folder = fullfile(file_loc, '\\Output_Files');

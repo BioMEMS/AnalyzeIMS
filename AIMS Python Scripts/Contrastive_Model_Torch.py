@@ -8,28 +8,40 @@ from pytorch_metric_learning.losses import NTXentLoss
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+import torchvision.models as models
+from torchvision import transforms
+from torchvision.models import resnet18, ResNet18_Weights
 
+# Load a pre-trained model
+model = models.resnet18(pretrained=True)
+weights = ResNet18_Weights.DEFAULT
+preprocess = weights.transforms()
+# Create a feature extractor
+feature_extractor = torch.nn.Sequential(*list(model.children())[:-1])
 
 # load the dataset
 batch_size = 2
 epochs = 1000
 inChannel = 1
 x, y = 800, 80
+model_width=32
 #input_img = Input(shape = (x, y, inChannel))
 #enco = Input(shape = (128,))
 #metric_rep = Input(shape = (128,))
 
 num_classes = 2
-
+train_model = True
 Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
 
 class encoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.network = torch.nn.Sequential(
-            nn.Conv2d(1, 128, 3, padding='same'),
+            nn.Conv2d(1, 32, 3, padding='same'),
             nn.Flatten(),
-            nn.Linear(800*80*128, 128),
+            nn.Linear(800*80*32, 32),
             nn.ReLU(),
         )
     def forward(self, x):
@@ -40,7 +52,7 @@ class projection_head(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.projection_head = torch.nn.Sequential(
-            torch.nn.Linear(128, 128),
+            torch.nn.Linear(32, 32),
             torch.nn.ReLU(),
         )
     def forward(self, x):
@@ -51,7 +63,7 @@ class linear_probe(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.linear_probe = torch.nn.Sequential(
-            nn.Linear(128, 1),
+            nn.Linear(32, 1),
             nn.ReLU(),
         )
     def forward(self, x):
@@ -123,41 +135,53 @@ test_y = Health_Array[12:]
 
 cont_model = contrastive_model()
 
-loss_fn = NTXentLoss(temperature=0.10)
-optimizer = torch.optim.Adam(cont_model.parameters(), lr=0.0001)
+loss_fn = NTXentLoss(temperature=0.2)
+optimizer = torch.optim.Adam(cont_model.parameters(), lr=0.0000001)
 
-n_epochs = 500  # number of epochs to run
+n_epochs = 60  # number of epochs to run
 batch_size = 12  # size of each batch
 batches_per_epoch = len(train_x) // batch_size
+save_path = Path(str(Data_Path) + '\\contrastive_model.pt')
+if train_model:
 
-for epoch in range(n_epochs):
-    cont_model.train()
-    total_loss = 0
-    for i in range(batches_per_epoch):
-        start = i * batch_size
-        # take a batch
-        Xbatch = train_x[start:start + batch_size]
-        Xbatch_aug_1 = contrast_transforms(Xbatch.reshape(-1,1,800,80))
-        Xbatch_aug_2 = contrast_transforms(Xbatch.reshape(-1,1,800,80))
-        #for i, _ in enumerate(Xbatch_aug_1):
-        #   plt.imshow(Xbatch[i, :, :].reshape(800, 80))
-        #   plt.show()
-        #    plt.imshow(Xbatch_aug_2[i, :, :].reshape(800, 80))
-        #    plt.show()
-        ybatch = train_y[start:start + batch_size]
-        indices = torch.arange(0, Xbatch_aug_1.size(0))
-        labels = torch.cat([torch.tensor(ybatch), torch.tensor(ybatch)])
-        #labels = torch.cat((indices, indices))
-        # forward pass
-        y_pred_1 = cont_model(Xbatch_aug_1.reshape(-1,1,800,80))
-        y_pred_2 = cont_model(Xbatch_aug_2.reshape(-1, 1, 800, 80))
-        embeddings = torch.cat((y_pred_1, y_pred_2))
-        a = embeddings.detach().numpy().astype(float)
-        loss = loss_fn(embeddings, labels)
-        print(loss)
-        # backward pass
-        optimizer.zero_grad()
-        loss.backward()
-        # update weights
-        optimizer.step()
+    for epoch in range(n_epochs):
+        cont_model.train()
+        total_loss = 0
+        for i in range(batches_per_epoch):
+            start = i * batch_size
+            # take a batch
+            Xbatch = train_x[start:start + batch_size]
+            Xbatch_aug_1 = contrast_transforms(Xbatch.reshape(-1,1,800,80))
+            Xbatch_aug_2 = contrast_transforms(Xbatch.reshape(-1,1,800,80))
+            for i, _ in enumerate(Xbatch_aug_1):
+               plt.imshow(Xbatch[i, :, :].reshape(800, 80))
+               plt.show()
+            #    plt.imshow(Xbatch_aug_2[i, :, :].reshape(800, 80))
+            #    plt.show()
+            ybatch = train_y[start:start + batch_size]
+            indices = torch.arange(0, Xbatch_aug_1.size(0))
+            #labels = torch.cat([torch.tensor(ybatch), torch.tensor(ybatch)])
+            labels = torch.cat((indices, indices))
+            # forward pass
+            y_pred_1 = cont_model(Xbatch_aug_1.reshape(-1,1,800,80))
+            y_pred_2 = cont_model(Xbatch_aug_2.reshape(-1, 1, 800, 80))
+            embeddings = torch.cat((y_pred_1, y_pred_2))
+            a = embeddings.detach().numpy().astype(float)
+            loss = loss_fn(embeddings, labels)
+            print(loss)
+            # backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            # update weights
+            optimizer.step()
+    torch.save(cont_model, save_path)
+else:
+    cont_model.load_state_dict(torch.load(save_path, weights_only=True))
+clf = LogisticRegression(verbose=1)
+
+train_x_encoded = cont_model(train_x.reshape(-1,1,800,80)).detach().numpy()
+test_x_encoded = cont_model(test_x.reshape(-1,1,800,80)).detach().numpy()
+clf.fit(train_x_encoded, train_y,)
+test_x_pred = clf.predict(test_x_encoded)
+clf_acc = accuracy_score(test_x_pred, test_y)
 print('pause')

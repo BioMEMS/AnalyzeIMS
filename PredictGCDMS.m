@@ -10,7 +10,7 @@ intensity_rip_removal log_upper_cv log_upper_cv_nnz max_cv_index max_rt_index mi
 min_rt_index numLV original_intensity_Var rt strBlank temp_intensity_Var...
 valCVMaxNeg valCVMaxPos valCVMinNeg valCVMinPos valModelType valRTMaxNeg...
 valRTMaxPos valRTMinNeg valRTMinPos vecSSCurrAxes vecSSCurrShownIndices classifications...
-numLV strBlank random_forest_model cv_stats rt_stats CV_end CV_start AUC C ...
+numLV strBlank random_forest_model cv_stats rt_stats CV_end CV_start AUC C checked_samples ...
     
     
 
@@ -19,6 +19,8 @@ sample_names_col = 2;
 compensation_voltage_col = 1;
 retention_time_col = 2;
 intensity_col = 3;
+
+
 
 %peak_detection_init_data_var = load('peak_detection_init_data.mat');
 load('peak_detection_init_data.mat');
@@ -129,6 +131,45 @@ function level_button_clicked(source, event)
     func_plot_graph(levelPlot,gcdms.get_cv(index),gcdms.get_rt(index),gcdms.get_level_label(index),'bone');
     gcdms = gcdms.compute_peak_statistics();
 end
+
+checkboxUseNegativeSpectra = uicontrol('Style','checkbox',...
+    'Visible', 'on',...
+    'Units', 'normalized', ...
+    'Value', 0, 'Position', [0.04 0.73 .01 .02 ],...
+    'Callback', {@checkboxUseNegativeSpectra_Callback});
+
+function checkboxUseNegativeSpectra_Callback(source, eventdata)
+    if get(checkboxUseNegativeSpectra, 'Value') == 1
+        intensity_col = 4;
+    else
+        intensity_col = 3;
+    end
+    gcdms = AimsInput(cellPlaylist(:,sample_names_col),...
+                  cellData(:,compensation_voltage_col),...
+                  cellData(:,retention_time_col),...
+                  cellData(:,intensity_col));
+    gcdms = gcdms.copy_cv_rt_int();
+    sel_sample_index = 1;
+    gcdms = gcdms.set_sel_sample_index(sel_sample_index);
+    % if watershed graph is empty compute watershed. if not display
+    % watershed graph
+    % https://www.mathworks.com/matlabcentral/answers/263788-how-to-detect-if-a-figure-exist
+    if (~isempty(originalGcdmsPlot.Children))
+        func_plot_graph(originalGcdmsPlot,gcdms.get_cv(sel_sample_index),gcdms.get_rt(sel_sample_index),gcdms.get_intensity(sel_sample_index));
+    end
+    if (~isempty(levelPlot.Children))
+        func_plot_graph(levelPlot,gcdms.get_cv(sel_sample_index),gcdms.get_rt(sel_sample_index),gcdms.get_level_label(sel_sample_index),'bone');
+    end
+    if (~isempty(NoiseReductionPlot.Children))
+        func_plot_graph(NoiseReductionPlot,gcdms.get_cv(sel_sample_index),gcdms.get_rt(sel_sample_index),gcdms.get_watershed_label(sel_sample_index),'bone');
+    end
+end
+
+uicontrol('Style','text', 'String','Use Negative Spectra for Analysis',...
+    'Units', 'normalized',...
+     'HorizontalAlignment', 'left',...
+    'Position', [0.04 0.7 .1 .02 ]);
+
 %%%%%%%Noise peak reduction%%%
 noise_red = BasicPanelFiveTextBox(PeakDetectionTab,'Noise Reduction Panel',-2.5,0,1200,1230);
 noise_red = noise_red.set_panel_position([.6 .72 .35 .27]);
