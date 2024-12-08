@@ -523,7 +523,7 @@ classdef AimsInput
             % improve the constrast of the image to help show the peaks
             % more
             adj_intensity = imadjust(intensity);
-            bin_intensity = im2bw(adj_intensity, levels);
+            bin_intensity = imbinarize(adj_intensity, levels);
             bw_intensity = bin_intensity;
             % Make bakcground -inf and peaks 1
             log_background = ~bin_intensity;

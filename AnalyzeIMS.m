@@ -1,6 +1,7 @@
 function AnalyzeIMS
-close all
-clear
+close all;
+clear;
+clc;
 strLogFile = [getenv('appdata'), '\LogFile.txt'];
 diary(strLogFile);
 
@@ -9,6 +10,8 @@ diary(strLogFile);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 set(0,'DefaultTextInterpreter','none');
 
+
+  
 s = warning('off', 'MATLAB:uitabgroup:OldVersion'); %#ok<NASGU>
 
 

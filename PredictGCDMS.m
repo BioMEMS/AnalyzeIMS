@@ -151,6 +151,32 @@ function checkboxUseNegativeSpectra_Callback(source, eventdata)
     gcdms = gcdms.copy_cv_rt_int();
     sel_sample_index = 1;
     gcdms = gcdms.set_sel_sample_index(sel_sample_index);
+
+
+    numSamples = size(gcdms.get_sample_names(),1);
+    maxInt = 0;
+    for i=1:numSamples
+        int = gcdms.get_intensity(1);
+        max_int = max(max(int));
+        if maxInt < max_int
+            maxInt = max_int;
+        end
+    end
+
+    
+    uicontrol(PeakDetectionTab, 'Style','text',...
+        'String',strcat("max intensity = ",string(round(maxInt,3))),...
+        'Units', 'normalized',  'HorizontalAlignment', 'left',...
+        'Position',[.41 .78 .06 .02 ]); 
+    
+    actual_int = .93*maxInt;
+    
+    actual_text = uicontrol(PeakDetectionTab, 'Style','text',...
+        'String',strcat("actual intensity = ",string(round(actual_int,3))),...
+        'Units', 'normalized',  'HorizontalAlignment', 'left',...
+        'Position',[.41 .9 .08 .02]); 
+
+
     % if watershed graph is empty compute watershed. if not display
     % watershed graph
     % https://www.mathworks.com/matlabcentral/answers/263788-how-to-detect-if-a-figure-exist
@@ -158,6 +184,7 @@ function checkboxUseNegativeSpectra_Callback(source, eventdata)
         func_plot_graph(originalGcdmsPlot,gcdms.get_cv(sel_sample_index),gcdms.get_rt(sel_sample_index),gcdms.get_intensity(sel_sample_index));
     end
     if (~isempty(levelPlot.Children))
+        gcdms = gcdms.compute_all_watershed(level_value);
         func_plot_graph(levelPlot,gcdms.get_cv(sel_sample_index),gcdms.get_rt(sel_sample_index),gcdms.get_level_label(sel_sample_index),'bone');
     end
     if (~isempty(NoiseReductionPlot.Children))

@@ -44,7 +44,6 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
     disp(class(filename))
     filename=convertCharsToStrings(filename);
     disp(class(filename))
-    cv_row = 1;
     %right_cv = t{cv_row,3:end};
     %left_cv = str2double(cell2mat(t{cv_row,2}));
     %Vc = horzcat(left_cv,right_cv)';
@@ -57,9 +56,17 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
         Vc = str2double(T{cv_row,2:end})';
         disp(Vc)
         disp(size(amplitude))
-    else
+    elseif ~isnan(T{cv_row,2:end})
+        %cv_row = 1;
         amplitude = T{4:end,2:end};
         timeStamp = T{4:end,1};
+        Vc = T{cv_row,2:end}';
+        disp(Vc)
+        disp(size(amplitude))
+    elseif ~isnan(T{1,2:end})
+        cv_row = 1;
+        amplitude = T{3:end,2:end};
+        timeStamp = T{3:end,1};
         Vc = T{cv_row,2:end}';
         disp(Vc)
         disp(size(amplitude))
