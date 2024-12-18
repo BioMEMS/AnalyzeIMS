@@ -50,7 +50,12 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
     
     cv_row = 2;
     T = readtable(filename,'NumHeaderLines',0,'ReadVariableNames',false);
-    if ~isnan(mean(str2double(T{4:end,2:end})))
+    if ( (size(T,2) == 102) && (any(~isnan(T{1,2:100})) ) )
+        cv_row = 1;
+        amplitude = T{3:end,2:101};
+        timeStamp = T{4:end,1};
+        Vc = T{cv_row,2:101};
+    elseif ~isnan(mean(str2double(T{4:end,2:end})))
         amplitude = str2double(T{4:end,2:end});
         timeStamp = str2double(T{4:end,1});
         Vc = str2double(T{cv_row,2:end})';
