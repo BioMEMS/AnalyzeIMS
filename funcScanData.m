@@ -44,10 +44,10 @@ for i=1:numPOS
             = DMSRead([listFiles{i}, '_Pos.xls']);
         [vecVCTest, vecTSTest, arrScanNeg{i}]...
             = DMSRead([listFiles{i}, '_Neg.xls']);
-        k1 = arrVC{i}
-        k2 = vecVCTest
-        k3 = vecTSTest
-        k4 = arrTimeStamp{i}
+        k1 = arrVC{i};
+        k2 = vecVCTest;
+        k3 = vecTSTest;
+        k4 = arrTimeStamp{i};
         if ~(all(vecVCTest == arrVC{i})) || ~(all(vecTSTest == arrTimeStamp{i}))
             warning('funcScanData:DMSReadFail',...
                 'DMSRead failed on file (Pos/Neg VC or Time Stamp Not Equal): \n %s \n',...
