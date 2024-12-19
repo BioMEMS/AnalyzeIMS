@@ -54,7 +54,7 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
         cv_row = 1;
         amplitude = T{4:end,2:101};
         timeStamp = T{4:end,1};
-        Vc = T{cv_row,2:101};
+        Vc = T{cv_row,2:101}';
         amplitude(isnan(amplitude))= median(median(amplitude, "omitnan"), "omitnan");
     elseif ~isnan(mean(str2double(T{4:end,2:end})))
         amplitude = str2double(T{4:end,2:end});
