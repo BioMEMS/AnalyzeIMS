@@ -63,8 +63,8 @@ model_width=32
 
 
 train_cont_model = False
-#Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\Dispersion data test set'
-Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
+Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\Dispersion data test set'
+#Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
 class encoder(torch.nn.Module):
     def __init__(self):
         super().__init__()

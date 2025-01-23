@@ -60,8 +60,8 @@ model_width=32
 
 
 train_cont_model = False
-#Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\Dispersion data test set'
-Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
+Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\Dispersion data test set'
+#Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
 class encoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -151,9 +151,9 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=100):
                             inputs = preprocess(inputs_raw)
                             labels = torch.tensor(train_y[start:start + batch_size]).long()
 
-                    for i, _ in enumerate(inputs):
-                        plt.imshow(inputs[i,0, :, :])#.reshape(224, 224))
-                        plt.show()
+                    #for i, _ in enumerate(inputs):
+                    #    plt.imshow(inputs[i,0, :, :])#.reshape(224, 224))
+                    #   plt.show()
 
                 if phase == 'val':
                     inputs_raw = test_x[start:start + batch_size]
@@ -275,9 +275,9 @@ for file in Dir_Files:
     #print('pause')
 window_min = np.max([np.min(x[:,0].astype(float)) for x in file_list])
 window_max = np.min([np.max(x[:,0].astype(float)) for x in file_list])
-Health_Array = np.array([1,0,1,0,1,0,1,0,1,0,1,0,
-                1,0,1,0,1,0,1,0,1,0,1,0])
-#Health_Array = np.array([1 if 'butanone' in str(x) else 0 for x in Dir_Files])
+#Health_Array = np.array([1,0,1,0,1,0,1,0,1,0,1,0,
+#                1,0,1,0,1,0,1,0,1,0,1,0])
+Health_Array = np.array([1 if 'butanone' in str(x) else 0 for x in Dir_Files])
 
 file_list[0][np.where(np.logical_and(file_list[0][:,0].astype(float)>=window_min, file_list[0][:,0].astype(float)<=window_max))[0],:]
 file_list_cropped = [x[np.where(np.logical_and(x[:,0].astype(float)>=window_min, x[:,0].astype(float)<=window_max))[0],:] for x in file_list]

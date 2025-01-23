@@ -39,25 +39,44 @@ arrScanNeg = cell(numPOS, 1);
 
 %Load Data
 for i=1:numPOS
-    try  
-        [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
-            = DMSRead([listFiles{i}, '_Pos.xls']);
-        [vecVCTest, vecTSTest, arrScanNeg{i}]...
-            = DMSRead([listFiles{i}, '_Neg.xls']);
-        k1 = arrVC{i};
-        k2 = vecVCTest;
-        k3 = vecTSTest;
-        k4 = arrTimeStamp{i};
-        if ~(all(vecVCTest == arrVC{i})) || ~(all(vecTSTest == arrTimeStamp{i}))
-            warning('funcScanData:DMSReadFail',...
-                'DMSRead failed on file (Pos/Neg VC or Time Stamp Not Equal): \n %s \n',...
-                listFiles{i})
-            arrVC{i} = [];
-            arrTimeStamp{i} = [];
-            arrScanPos{i} = [];
-            arrScanNeg{i} = [];
+    try
+        try  
+            [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
+                = DMSRead([listFiles{i}, '_Pos.xls']);
+            [vecVCTest, vecTSTest, arrScanNeg{i}]...
+                = DMSRead([listFiles{i}, '_Neg.xls']);
+            k1 = arrVC{i};
+            k2 = vecVCTest;
+            k3 = vecTSTest;
+            k4 = arrTimeStamp{i};
+            if ~(all(vecVCTest == arrVC{i})) || ~(all(vecTSTest == arrTimeStamp{i}))
+                warning('funcScanData:DMSReadFail',...
+                    'DMSRead failed on file (Pos/Neg VC or Time Stamp Not Equal): \n %s \n',...
+                    listFiles{i})
+                arrVC{i} = [];
+                arrTimeStamp{i} = [];
+                arrScanPos{i} = [];
+                arrScanNeg{i} = [];
+            end
+        catch
+            [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
+                = DMSRead([listFiles{i}, '_Pos.xlsx']);
+            [vecVCTest, vecTSTest, arrScanNeg{i}]...
+                = DMSRead([listFiles{i}, '_Neg.xlsx']);
+            k1 = arrVC{i};
+            k2 = vecVCTest;
+            k3 = vecTSTest;
+            k4 = arrTimeStamp{i};
+            if ~(all(vecVCTest == arrVC{i})) || ~(all(vecTSTest == arrTimeStamp{i}))
+                warning('funcScanData:DMSReadFail',...
+                    'DMSRead failed on file (Pos/Neg VC or Time Stamp Not Equal): \n %s \n',...
+                    listFiles{i})
+                arrVC{i} = [];
+                arrTimeStamp{i} = [];
+                arrScanPos{i} = [];
+                arrScanNeg{i} = [];
+            end
         end
-        
     catch err  %#ok<NASGU>
         warning('funcScanData:DMSReadFail',...
             'DMSRead failed on file: \n %s \n', listFiles{i})

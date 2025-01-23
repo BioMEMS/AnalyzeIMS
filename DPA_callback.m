@@ -1347,7 +1347,7 @@ function detectRidgesSampleTable_Callback(source, eventdata)
     axes(originalDispersionPlot);
 % %     surf(flipud(originalImage));        % Another option for smoother visualization
 % %     view(0, 90);
-    imagesc(imadjust(originalImage));
+    imagesc(imadjust(originalImage/max(max(originalImage))));
     colormap 'Bone';
     title(['A. Original Dispersion Plot: Sample ', num2str(detectRidgeSampleNum)], 'fontweight', 'bold');
     shading(originalDispersionPlot, 'interp');
@@ -1374,7 +1374,7 @@ function detectRidgesSampleTable_Callback(source, eventdata)
     red = cat(3, ones(size(skeletonImage)), zeros(size(skeletonImage)), zeros(size(skeletonImage)));
     
     axes(skeletonizedDispersionPlot);
-    imagesc(imadjust(originalImage));
+    imagesc(imadjust(originalImage/max(max(originalImage))));
     hold on;
     alpha = 0.65;
     himage = imagesc(red);

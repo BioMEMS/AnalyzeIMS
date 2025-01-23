@@ -3618,8 +3618,11 @@ function funcAddNewFiles(listAddFiles)
         | strcmp('_Pos.xls', x(end-7:end)) | strcmp('_Neg.xls', x(end-7:end))...
         |strcmp('_HDR.XLS', x(end-7:end)) | strcmp('_POS.XLS', x(end-7:end))...
         | strcmp('_NEG.XLS', x(end-7:end)) |strcmp('_HDR.xls', x(end-7:end)) | strcmp('_POS.xls', x(end-7:end))...
-        | strcmp('_NEG.xls', x(end-7:end)), listAddFiles);
-    listAddFiles = cellfun(@(x) {x(1:end-8)}, listAddFiles(vecBoolCorrectFormat));
+        | strcmp('_NEG.xls', x(end-7:end))| strcmp('Pos.xlsx', x(end-7:end)) | strcmp('Neg.xlsx', x(end-7:end)), listAddFiles);
+    %listAddFiles = cellfun(@(x) {x(1:end-8)}, listAddFiles(vecBoolCorrectFormat));
+    listAddFiles = cellfun(@(x) strsplit(x,'.'), listAddFiles(vecBoolCorrectFormat), 'UniformOutput', false);
+    listAddFiles = cellfun(@(x) x{1}, listAddFiles, 'UniformOutput', false);
+    listAddFiles = cellfun(@(x) {x(1:end-4)}, listAddFiles);
     listAddFiles = unique(listAddFiles);
 
     numFiles = length(listAddFiles);
