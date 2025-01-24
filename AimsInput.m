@@ -84,7 +84,7 @@ classdef AimsInput
             end
             
             log_lower_rt = rt < lower_rt;
-            log_upper_rt = rt > upper_rt
+            log_upper_rt = rt > upper_rt;
             both_rt = log_lower_rt | log_upper_rt;
             both_rt = ~both_rt;
             
@@ -95,7 +95,7 @@ classdef AimsInput
                 all_rt{i,1} = new_rt;
             end
             
-            min_cv_index = nnz(log_lower_cv);
+            min_cv_index = nnz(log_lower_cv)+1;
             max_cv_index = size(cv,1) - nnz(log_upper_cv);
             assignin('base', 'log_upper_cv', log_upper_cv);
             assignin('base', 'log_upper_cv_nnz', nnz(log_upper_cv));
@@ -111,7 +111,7 @@ classdef AimsInput
             for i=1:size(all_intensity,1) 
                 tempIntensity = all_intensity{i,1};
                 assignin('base', 'temp_intensity_Var', tempIntensity);
-                new_intensity = tempIntensity(min_rt_index:max_rt_index-1,min_cv_index:max_cv_index-1);
+                new_intensity = tempIntensity(min_rt_index:max_rt_index-1,min_cv_index:max_cv_index);
                 all_intensity{i,1} = new_intensity;
             end
             obj.retention_time = all_rt;
