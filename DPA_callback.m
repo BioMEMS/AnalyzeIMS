@@ -1308,8 +1308,8 @@ function detectRidgesSampleTable_Callback(source, eventdata)
     
     % Segmentation
     level = detectRidgeSettings.segmentationThresh;
-    segmented_pos = im2binarize(PCPos, level);
-    segmented_neg = im2binarize(PCNeg, level);
+    segmented_pos = imbinarize(PCPos, level);
+    segmented_neg = imbinarize(PCNeg, level);
     
     % Skeletonize
     BWThinPos = bwmorph(segmented_pos, 'thin', Inf);
