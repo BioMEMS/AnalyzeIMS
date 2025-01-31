@@ -12,7 +12,7 @@ set(0,'DefaultTextInterpreter','none');
 
 
   
-s = warning('off', 'MATLAB:uitabgroup:OldVersion'); %#ok<NASGU>
+s = warning('off', 'MATLAB:uitaFbgroup:OldVersion'); %#ok<NASGU>
 
 
 % Create the Table of the Playlist
