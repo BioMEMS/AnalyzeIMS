@@ -4,7 +4,7 @@ clc;
 
 %% User Input Variables
 
-file_loc = 'C:\Users\Reid Honeycutt\Documents\SensIT Foxhound 1_25\test_test';
+file_loc = 'C:\Users\Reid Honeycutt\Documents\Eva_IMS_April25';
 %file_loc = 'C:\Users\Aditya\Box\2_BIOMEMS SHARED FOLDERS\02_projects\NIH U01 SCENT II\uPC-GC-DMS-data\2024-12-04';
 files = dir(file_loc);
 file_loc_output = fullfile(file_loc, 'Output_Files');

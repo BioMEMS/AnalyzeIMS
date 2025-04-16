@@ -8,6 +8,21 @@ from torch import nn
 from torch import Tensor
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
+from pathlib import Path
+import os
+from torchvision.transforms import v2
+
+contrast_transforms = v2.Compose([v2.RandomResizedCrop(size=(800,80), scale=(0.9,0.9)),
+                                          #transforms.RandomApply([
+                                          v2.ColorJitter(brightness=0.5, contrast=0.5,),
+                                          #                           saturation=0.5,
+                                          #                           hue=0.1)
+                                          #], p=0.8),
+                                          #transforms.RandomGrayscale(p=0.2),
+                                          v2.GaussianBlur(kernel_size=9),
+                                          #transforms.ToTensor(),
+                                          v2.RandomEqualize(p=1.0)
+                                         ])
 
 
 def random_masking(x, mask_ratio):
@@ -211,6 +226,38 @@ class VissionTransformer(nn.Module):
         x = self.attention(embeddings)
         x = self.ff(x[:, 0, :])
         return x
+
+## Loading Data
+Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
+
+Data_Path = Path(Data_Path)
+Dir_Files = os.listdir(Data_Path)
+Dir_Files = [x for x in Dir_Files if ('Pos.xls' in x)]
+Dir_Files = [Path(str(Data_Path)+'\\'+x) for x in Dir_Files]
+
+file_list = []
+for file in Dir_Files:
+    xls = np.loadtxt(file, dtype=object, delimiter='\t', skiprows=3)
+    file_list.append(xls[:,1:])
+    #print('pause')
+window_min = np.max([np.min(x[:,0].astype(float)) for x in file_list])
+window_max = np.min([np.max(x[:,0].astype(float)) for x in file_list])
+Health_Array = np.array([1,0,1,0,1,0,1,0,1,0,1,0,
+               1,0,1,0,1,0,1,0,1,0,1,0])
+#file_list[0][np.where(np.logical_and(file_list[0][:,0].astype(float)>=window_min, file_list[0][:,0].astype(float)<=window_max))[0],:]
+file_list_cropped = [x[np.where(np.logical_and(x[:,0].astype(float)>=window_min, x[:,0].astype(float)<=window_max))[0],:] for x in file_list]
+shortest_file = np.min([len(x) for x in file_list_cropped])-2
+file_list_double_cropped = [x[:shortest_file,80:] for x in file_list_cropped]
+file_list_double_cropped = [x[200:1000,40:] for x in file_list_double_cropped]
+Image_Array = np.array(file_list_double_cropped).astype('float32').reshape(-1,800,80,1)
+
+train_x = torch.tensor(Image_Array[:12,:,:,:].reshape(-1,800,80))
+train_x = torch.tensor(np.stack((Image_Array[:12,:,:,:].reshape(-1,800,80),)*3, axis=1))
+train_x_aug = contrast_transforms(train_x)
+test_x = torch.tensor(Image_Array[12:,:,:,:].reshape(-1,800,80))
+test_x = torch.tensor(np.stack((Image_Array[12:,:,:,:].reshape(-1,800,80),)*3, axis=1))
+test_x_aug = contrast_transforms(test_x)
+
 
 if __name__ == '__main__':
     # Example usage

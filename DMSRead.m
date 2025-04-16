@@ -82,6 +82,13 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
         Vc = T{cv_row,2:end}';
         %disp(Vc)
         %disp(size(amplitude))
+    elseif ~isnan(T{2,2:end-1})
+        cv_row = 2;
+        amplitude = T{3:end,2:end-1};
+        timeStamp = T{3:end,1};
+        Vc = T{cv_row,2:end-1}';
+        %disp(Vc)
+        %disp(size(amplitude))
     end
     
 %     try
