@@ -1768,6 +1768,7 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
                 currTotalCell{vecLoc(2)} = currCell;
                 
                 set(objTableMain, 'ColumnFormat', currTotalCell);
+                valMassLabel.String = currTotalCell{1,4}(1:end-1);
                 
             end
             
@@ -1820,11 +1821,11 @@ objTableMain = uitable(tabSamples, 'Units', 'normalized',...
 % Edit Categories Section
 
 valNewCategory = uicontrol(tabSamples, 'Style','edit', 'String', '', 'Units', 'normalized',...
-    'Max', 1, 'Min', 0, 'Position',[.8 .96 .20 .03 ]);
+    'Max', 1, 'Min', 0, 'Position',[.8 .96 .16 .03 ]);
 
 buttAddCategory = uicontrol(tabSamples, 'Style','pushbutton',...
     'Units', 'normalized', 'String','Add Category',...
-    'Position',[.8 .92 .20 .03], ...
+    'Position',[.8 .925 .16 .03], ...
     'Callback',{@buttAddCategory_Callback}); %#ok<NASGU>
     function buttAddCategory_Callback(~,~) 
         strNewCategory = strtrim(get(valNewCategory, 'String'));
@@ -1848,7 +1849,9 @@ buttAddCategory = uicontrol(tabSamples, 'Style','pushbutton',...
                 end
                 cellPlaylist = [cellPlaylist, cellTemp];
                 set(objTableMain, 'Data', cellPlaylist);
-            end            
+            end
+        column_names = get(objTableMain, 'ColumnName');
+        valSelectColumn.String = column_names(4:end,1);
         else
             funcToast(sprintf('Nothing in Add Category Box.\n\nPlease enter a Category name in the Add Category box.'),...
                 'Add Category Box is Empty', 'warn')
@@ -1857,6 +1860,127 @@ buttAddCategory = uicontrol(tabSamples, 'Style','pushbutton',...
     end
 
 
+valSelectColumn = uicontrol(tabSamples, 'Style','popupmenu', 'String', '___', 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position',[.45 .875 .16 .03 ], 'Callback',{@valSelectColumn_Callback});
+    function valSelectColumn_Callback(src,event)
+        currTotalCell = get(objTableMain, 'ColumnFormat');
+        try
+            currCell = currTotalCell{find(strcmp(get(objTableMain, 'ColumnName'), src.String{src.Value}))};
+        catch
+            warning('Invalid column selection.');
+            return;
+        end
+        valMassLabel.String = currCell(1,1:end-1);
+    end
+
+textSelectColumn = uicontrol(tabSamples, 'Style','text','String','Select Column','Units', 'normalized', 'HorizontalAlignment', 'left',...
+     'Position',[.45 .8525 .1 .02 ]);
+
+valMassLabel = uicontrol(tabSamples, 'Style','popupmenu', 'String', '___', 'Units', 'normalized',...
+    'Max', 1, 'Min', 0, 'Position',[.625 .875 .16 .03 ]);
+
+textSelectLabel = uicontrol(tabSamples, 'Style','text','String','Select Label','Units', 'normalized', 'HorizontalAlignment', 'left',...
+     'Position',[.625 .8525 .1 .02 ]);
+
+textLabelChecked = uicontrol(tabSamples, 'Style','text','String','Label Checked Samples','Units', 'normalized', 'HorizontalAlignment', 'left',...
+     'Position',[.8 .8525 .2 .02 ]);
+
+buttMassLabel = uicontrol(tabSamples, 'Style','pushbutton',...
+    'Units', 'normalized', 'String','Mass Label',...
+    'Position',[.8 .875 .16 .03], ...
+    'Callback',{@buttMassLabel_Callback}); %#ok<NASGU>
+    function buttMassLabel_Callback(src,event)
+        %vecLoc = event.Indices;
+        currTotalCell = get(objTableMain, 'ColumnFormat');
+        try
+            SelectedColumn = find(strcmp(get(objTableMain, 'ColumnName'), valSelectColumn.String{valSelectColumn.Value}));
+        catch
+            warning('Invalid column selection.');
+            return;
+        end
+            matCurrHighlighted = get(objTableMain, 'UserData');
+        %vecBoolCurrCol = logical(matCurrHighlighted(:,2)==vecLoc(2));
+        %matCurrHighlighted = matCurrHighlighted(vecBoolCurrCol,:);
+        try
+            stringval = valMassLabel.String{valMassLabel.Value};
+        catch
+            warning('Invalid label selection.');
+            return;
+        end
+        for i=1:size(cellPlaylist,1)
+            if cellPlaylist{i,1} == 1
+                cellPlaylist{i, SelectedColumn}= stringval;
+            end
+        end
+        set(objTableMain, 'Data', cellPlaylist);
+        funcRefreshPlaylist();
+        
+    end
+
+uicontrol(tabSamples, 'Style','text', 'String','Index Range:',...
+    'Units', 'normalized', ...
+    'HorizontalAlignment', 'left', 'Position',[0 .865 .14 .03 ]);
+valIndexMin = uicontrol(tabSamples, 'Style','edit',...
+    'String', 1, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
+    'Position',[0 .85 .07 .025 ]);
+valIndexMax = uicontrol(tabSamples, 'Style','edit',...
+    'String', 15, 'Units', 'normalized', 'Max', 1, 'Min', 0,...
+    'Position',[.08 .85 .07 .025 ]);
+buttCheckAll = uicontrol(tabSamples, 'Style','pushbutton',...
+    'Units', 'normalized', 'String','Check',...
+    'Position',[.16 .85 .08 .03], ...
+    'Callback',{@buttCheckAll_Callback}); %#ok<NASGU>
+
+    function buttCheckAll_Callback(~, ~)
+        valMax = str2double(get(valIndexMax, 'String'));
+        valMin = str2double(get(valIndexMin, 'String'));
+        if valMax < valMin
+            set(valIndexMax, 'String', num2str(valMin+1));
+        end
+        if valMin < 1
+            set(valIndexMin, 'String', num2str(1));
+        end
+        if valMax > size(cellPlaylist,1)
+            set(valIndexMax, 'String', num2str(size(cellPlaylist,1)));
+        end
+        valMax = str2double(get(valIndexMax, 'String'));
+        valMin = str2double(get(valIndexMin, 'String'));
+        for i=1:size(cellPlaylist,1)
+            if ( (i >= valMin) && (i<= valMax) )
+                cellPlaylist{i, 1} = true(1);
+                objTableMain.Data{i,1} = true(1);
+            end
+        end
+        set(objTableMain, 'Data', cellPlaylist);
+        funcRefreshPlaylist;
+    end
+buttUncheckAll = uicontrol(tabSamples, 'Style','pushbutton',...
+    'Units', 'normalized', 'String','Uncheck',...
+    'Position',[.25 .85 .08 .03], ...
+    'Callback',{@buttUncheckAll_Callback}); %#ok<NASGU>
+
+    function buttUncheckAll_Callback(~, ~)
+        valMax = str2double(get(valIndexMax, 'String'));
+        valMin = str2double(get(valIndexMin, 'String'));
+        if valMax < valMin
+            set(valIndexMax, 'String', num2str(valMin+1));
+        end
+        if valMin < 1
+            set(valIndexMin, 'String', num2str(1));
+        end
+        if valMax > size(cellPlaylist,1)
+            set(valIndexMax, 'String', num2str(size(cellPlaylist,1)));
+        end
+        valMax = str2double(get(valIndexMax, 'String'));
+        valMin = str2double(get(valIndexMin, 'String'));
+        for i=1:size(cellPlaylist,1)
+            if ( (i >= valMin) && (i<= valMax) )
+                cellPlaylist{i, 1} = false(1);
+            end
+        end
+        set(objTableMain, 'Data', cellPlaylist);
+        funcRefreshPlaylist;
+    end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Preprocessing Tab
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

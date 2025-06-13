@@ -18,7 +18,7 @@ numVc = length(Vc);
 
 
 % file is not in same format
-if (numVc == 0)
+if (numVc <= 5)
     [Vc, timeStamp, amplitude ] = read_DMS(filename);
     return
 end
@@ -50,7 +50,13 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
     
     cv_row = 2;
     T = readtable(filename,'NumHeaderLines',0,'ReadVariableNames',false);
-    if ( (size(T,2) <= 20) )
+    if ( (size(T,2) == 2) )
+        %cv_row = 1;
+        amplitude = repmat(T{1:end, 2:end},1,5);
+        timeStamp = T{1:end,1};
+        Vc = (1:5)';
+        amplitude(isnan(amplitude))= median(median(amplitude, "omitnan"), "omitnan");
+    elseif ( (size(T,2) <= 20) )
         %cv_row = 1;
         amplitude = T{1:end,2:end};
         timeStamp = T{1:end,1};
@@ -63,9 +69,12 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
         Vc = T{cv_row,2:101}';
         amplitude(isnan(amplitude))= median(median(amplitude, "omitnan"), "omitnan");
     elseif ~isnan(mean(str2double(T{4:end,2:end})))
-        amplitude = str2double(T{4:end,2:end});
-        timeStamp = str2double(T{4:end,1});
-        Vc = str2double(T{cv_row,2:end})';
+        %amplitude = str2double(T{4:end,2:end-1});
+        amplitude = str2double(T{4:4100,601:1800});
+        
+        timeStamp = str2double(T{4:4100,1});
+        %Vc = str2double(T{cv_row,2:end-1})';
+        Vc = str2double(T{cv_row,601:1800})';
         %disp(Vc)
         %disp(size(amplitude))
     elseif ~isnan(T{cv_row,2:end})

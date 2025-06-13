@@ -103,11 +103,29 @@ end
 % Creating a panel allows you to easily move all front end objects in the
 % panel because it also moves objects on the panel to 
 % Create settings panel for detect ridges page
-level = BasicPanel(PeakDetectionTab,'Level Panel',0.93);
-level = level.set_text_box_label_string('Level Threshold (0-1)');
+
+level = BasicPanelFiveTextBox(PeakDetectionTab,'Level Panel',0.93,2,0.93,10);
+level = level.set_text_box_label_string('Proportion of Max (0-1)');
 level = level.set_text_box_position([.5 .75 .2 .2]);
 level = level.set_panel_position([.4 .72 .2 .27]);
-level = level.set_button_position([.4 .2 .4 .15]);
+level = level.set_button_position([.4 .1 .4 .15]);
+level = level.remove_sd_text_box_label();
+level = level.set_text_box_label_position([.05 .77 .4 .15]);
+
+level = level.set_text_box_label_position([.05 .77 .4 .15]);
+level = level.set_text_box_label_string('Reference Sample 1');
+level = level.set_text_box2_label_position([.05 .62 .4 .15]);
+level = level.set_text_box2_label_string('Reference Sample 2');
+level = level.remove_first_two_sd_text_box_label();
+
+level = level.set_text_box3_label_string('Proportion of Max (0-1)');
+level = level.set_text_box3_label_position([.25 .45 .35 .1]);
+level = level.set_text_box4_label_string('Absolute Intensity');
+level = level.set_text_box4_label_position([.325 .3 .25 .075]);
+
+level = level.set_text_box3_position([.6 .45 .1 .15]);
+level = level.set_text_box4_position([.6 .3 .1 .15]);
+
 % the @ is a function handle
 % https://www.mathworks.com/help/matlab/matlab_prog/creating-a-function-handle.html
 level = level.set_button('Apply Watershed', @level_button_clicked);
@@ -122,7 +140,17 @@ function level_button_clicked(source, event)
     % sample
     index = gcdms.get_sel_sample_index();
     func_plot_graph(originalGcdmsPlot,gcdms.get_cv(index),gcdms.get_rt(index),gcdms.get_intensity(index));
-    level_value = str2double(get(level.get_text_box(), 'String'));
+    level_value_thresh = str2double(get(level.get_text_box3(), 'String'));
+    level_value_abs = str2double(get(level.get_text_box4(), 'String'))/max_int;
+    if level_value_abs > 1
+        level_value_abs = 0.99;
+    end
+    if level_value_thresh <= level_value_abs
+        level_value = level_value_thresh;
+    else
+        level_value = level_value_abs;
+    end
+    
     actual_text.String = strcat("Actual intensity = ",string(round(level_value*maxInt,3)));
     gcdms = gcdms.compute_all_watershed(level_value);
     %gcdms.get_cv(index)
@@ -167,14 +195,14 @@ function checkboxUseNegativeSpectra_Callback(source, eventdata)
     uicontrol(PeakDetectionTab, 'Style','text',...
         'String',strcat("max intensity = ",string(round(maxInt,3))),...
         'Units', 'normalized',  'HorizontalAlignment', 'left',...
-        'Position',[.41 .78 .06 .02 ]); 
+        'Position',[.41 .75 .06 .02 ]); 
     
     actual_int = .93*maxInt;
     
     actual_text = uicontrol(PeakDetectionTab, 'Style','text',...
         'String',strcat("actual intensity = ",string(round(actual_int,3))),...
         'Units', 'normalized',  'HorizontalAlignment', 'left',...
-        'Position',[.41 .9 .08 .02]); 
+        'Position',[0 0 .08 .02]); 
 
 
     % if watershed graph is empty compute watershed. if not display
@@ -270,9 +298,9 @@ peak_table = peak_table.set_text_box4_position([.6 .3 .1 .15]);
 
 
 uicontrol(PeakTableTab, 'Style','text',...
-    'String','Saves peak table as peak_table.mat',...
+    'String','Saves peak table as peak_table.mat and peak_table.csv',...
     'Units', 'normalized',  'HorizontalAlignment', 'left',...
-    'Position',[.85 .12 .1 .05])   
+    'Position',[.825 .12 .2 .05])   
 
 
 pk_save_button = uicontrol(PeakTableTab,...
@@ -286,7 +314,15 @@ function pk_save_button_clicked(source, event)
     peak_table = gcdms.get_peak_table();
     peak_cv = gcdms.get_cv_stats();
     peak_rt = gcdms.get_rt_stats();
+    peak_excel = [peak_rt(1,:)', peak_cv(1,:)'];
+    peak_excel = [["Mean RT", "Mean CV"]; peak_excel];
+    sample_labels = ["Sample 1 Intensity"];
+    for i = 1:size(peak_table,1)-1
+        sample_labels = [sample_labels, strcat("Sample ", num2str(i+1), " Intensity")];
+    end
+    peak_excel = horzcat(peak_excel, vertcat(sample_labels,peak_table'));
     save('peak_table.mat','peak_table','peak_cv','peak_rt')
+    writematrix(peak_excel, "peak_table.csv");
 end
 
 peak_table = peak_table.set_button('Generate Peak Table', @peak_table_button_clicked);
@@ -372,14 +408,14 @@ end
 uicontrol(PeakDetectionTab, 'Style','text',...
     'String',strcat("max intensity = ",string(round(maxInt,3))),...
     'Units', 'normalized',  'HorizontalAlignment', 'left',...
-    'Position',[.41 .78 .06 .02 ]); 
+    'Position',[.41 .76 .06 .02 ]); 
 
 actual_int = .93*maxInt;
 
 actual_text = uicontrol(PeakDetectionTab, 'Style','text',...
     'String',strcat("actual intensity = ",string(round(actual_int,3))),...
     'Units', 'normalized',  'HorizontalAlignment', 'left',...
-    'Position',[.41 .9 .08 .02]); 
+    'Position',[.41 .73 .08 .02]); 
 %%%%%% Remove Rip
 
 %cutoffRip = BasicPanel(PeakDetectionTab,'Rip Cut Off',-20);
@@ -619,9 +655,9 @@ uicontrol(PeakDetectionTab, 'Style','text',...
     'Position',[.2 .9 .15 .05 ])   
 
 uicontrol(PeakDetectionTab, 'Style','text',...
-    'String','2. Level thresholding keeps pixels above chosen value and removes everything below it.',...
+    'String','2. Level thresholding keeps pixels above chosen value and removes everything below it. The level threshold can be set either as a proportion of the maximum intensity value, or as an absolute value. The lowest threshold between the two is used for calculations.',...
     'Units', 'normalized',  'HorizontalAlignment', 'left',...
-    'Position',[.41 .82 .18 .05 ])   
+    'Position',[.41 .88 .18 .0825 ])   
 
 uicontrol(PeakDetectionTab, 'Style','text',...
     'String','3. The graph on the right shows all peaks identified by watershed algorithm. If there are noise peaks detected by watershed, then noise reduction can help remove these. Define a boundary (lower RT/CV, upper RT/CV) to characterize the noise. Choose a standard deviation criteria - a higher value will remove more peaks.',...

@@ -39,12 +39,19 @@ arrScanNeg = cell(numPOS, 1);
 
 %Load Data
 for i=1:numPOS
+    match_files = dir(strcat(listFiles{i}, '_*'));
+    match_folder = match_files.folder;
+    match_files = {match_files.name};
+    
     try
-        try  
+        if ( any(contains(match_files, ["Pos","pos","POS"])) && any(contains(match_files, ["Neg","neg","NEG"]) ) )
+            pos_ind = contains(match_files, ["Pos","pos","POS"]);
+            neg_ind = contains(match_files, ["Neg","neg","NEG"]);
+            
             [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
-                = DMSRead([listFiles{i}, '_Pos.xls']);
+                = DMSRead([match_folder,'\\',match_files{pos_ind}]);
             [vecVCTest, vecTSTest, arrScanNeg{i}]...
-                = DMSRead([listFiles{i}, '_Neg.xls']);
+                = DMSRead([match_folder,'\\',match_files{neg_ind}]);
             k1 = arrVC{i};
             k2 = vecVCTest;
             k3 = vecTSTest;
@@ -58,11 +65,15 @@ for i=1:numPOS
                 arrScanPos{i} = [];
                 arrScanNeg{i} = [];
             end
-        catch
+        else
+            pos_ind = contains(match_files, ["Pos","pos","POS"]);
             [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
-                = DMSRead([listFiles{i}, '_Pos.xlsx']);
-            [vecVCTest, vecTSTest, arrScanNeg{i}]...
-                = DMSRead([listFiles{i}, '_Neg.xlsx']);
+                = DMSRead([match_folder,'\\',match_files{pos_ind}]);
+            vecVCTest = arrVC{i};
+            vecTSTest = arrTimeStamp{i};
+            arrScanNeg{i} = ones(size(vecTSTest,1),1);
+            %[vecVCTest, vecTSTest, arrScanNeg{i}]...
+            %    = DMSRead([match_folder,'\\',match_files{pos_ind}]);
             k1 = arrVC{i};
             k2 = vecVCTest;
             k3 = vecTSTest;
