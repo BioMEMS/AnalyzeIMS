@@ -44,9 +44,9 @@ for i=1:numPOS
     match_files = {match_files.name};
     
     try
-        if ( any(contains(match_files, ["Pos","pos","POS"])) && any(contains(match_files, ["Neg","neg","NEG"]) ) )
-            pos_ind = contains(match_files, ["Pos","pos","POS"]);
-            neg_ind = contains(match_files, ["Neg","neg","NEG"]);
+        if ( any(contains(match_files, ["Pos.","pos.","POS."])) && any(contains(match_files, ["Neg.","neg.","NEG."]) ) )
+            pos_ind = contains(match_files, ["Pos.","pos.","POS."]);
+            neg_ind = contains(match_files, ["Neg.","neg.","NEG."]);
             
             [arrVC{i}, arrTimeStamp{i}, arrScanPos{i}]...
                 = DMSRead([match_folder,'\\',match_files{pos_ind}]);
