@@ -198,11 +198,13 @@ function checkboxUseNegativeSpectra_Callback(source, eventdata)
         'Position',[.41 .75 .06 .02 ]); 
     
     actual_int = .93*maxInt;
-    
+
+    delete(actual_text)
+
     actual_text = uicontrol(PeakDetectionTab, 'Style','text',...
         'String',strcat("actual intensity = ",string(round(actual_int,3))),...
         'Units', 'normalized',  'HorizontalAlignment', 'left',...
-        'Position',[0 0 .08 .02]); 
+        'Position',[.41 .73 .08 .02]); 
 
 
     % if watershed graph is empty compute watershed. if not display
@@ -408,7 +410,7 @@ end
 uicontrol(PeakDetectionTab, 'Style','text',...
     'String',strcat("max intensity = ",string(round(maxInt,3))),...
     'Units', 'normalized',  'HorizontalAlignment', 'left',...
-    'Position',[.41 .76 .06 .02 ]); 
+    'Position',[.41 .75 .06 .02 ]); 
 
 actual_int = .93*maxInt;
 

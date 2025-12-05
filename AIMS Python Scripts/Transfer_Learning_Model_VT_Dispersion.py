@@ -1,3 +1,4 @@
+## Import Libraries
 import numpy as np
 import torch
 import torch.nn as nn
@@ -23,17 +24,23 @@ import copy
 from sklearn.model_selection import train_test_split
 from PIL import Image
 
-
+## Set Parameters
 USE_TENSORBOARD = False
 BASE_LR = 0.001
 EPOCH_DECAY = 30 # number of epochs after which the Learning rate is decayed exponentially.
 DECAY_WEIGHT = 0.1
-
 num_augs = 5
-
-
 num_classes = 2
-# Load a pre-trained model
+# load the dataset
+batch_size = 2
+epochs = 1000
+inChannel = 1
+x, y = 100, 100
+model_width=32
+train_cont_model = False
+Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\Dispersion data test set'
+
+# Load pre-trained model
 model = models.vit_b_16(weights="DEFAULT")
 for i, param in enumerate(model.parameters()):
     param.requires_grad = False
@@ -49,20 +56,15 @@ weights = ViT_B_16_Weights.DEFAULT
 # Create a feature extractor
 #feature_extractor = torch.nn.Sequential(*list(model.children())[:-1])
 
-# load the dataset
-batch_size = 2
-epochs = 1000
-inChannel = 1
-x, y = 100, 100
-model_width=32
+
 #input_img = Input(shape = (x, y, inChannel))
 #enco = Input(shape = (128,))
 #metric_rep = Input(shape = (128,))
 
 
-train_cont_model = False
-Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\Dispersion data test set'
+
 #Data_Path = 'C:\\Users\\Reid Honeycutt\\Documents\\DMS data test set'
+## Define model
 class encoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -253,7 +255,7 @@ def exp_lr_scheduler(optimizer, epoch, init_lr=BASE_LR, lr_decay_epoch=EPOCH_DEC
         param_group['lr'] = lr
 
     return optimizer
-
+#Define data transformations
 preprocess = v2.Compose([
     #v2.Pad((360, 0)),
     v2.Resize(224),

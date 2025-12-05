@@ -1,0 +1,1 @@
+%Test script for dynamic time warping in matlab
