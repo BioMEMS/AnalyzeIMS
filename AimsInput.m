@@ -273,7 +273,7 @@ classdef AimsInput
             num_samples = size(obj.sample_names,1);
             num_peaks = size(peak_table_cv_rt,1);
             peak_table = zeros(num_samples,num_peaks);
-            peaks_to_add = [];cv_tol
+            peaks_to_add = [];
             old_peak_table_size = size(peak_table,1);
             temp = [];
             cv_locations = cell(1,num_peaks);
