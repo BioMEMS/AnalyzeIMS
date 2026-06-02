@@ -1,6 +1,8 @@
 %% QA/QC Script
 function QAQC_Script
 close all;
+%global mean_RIP_CV STD_RIP_CV
+SV_RIP_CV = [-11.33, 0.259]; %Mean and STD CV for RIP in SV scans (1200 SV)
 % Primary Window
 objButtonWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
     'none', 'Toolbar', 'figure', 'Position', [.1 0.1 0.10 0.20],...
@@ -12,10 +14,10 @@ objButtonWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
 set(objButtonWindow,'Visible','on');
 buttCVScan = uicontrol(objButtonWindow, 'Style','pushbutton',...
     'Units', 'normalized',...
-    'String','Analyze CV Scan',...
+    'String','Analyze SV Scan',...
     'Position',[.25 .8 .5 .1],...
-    'Callback',{@buttCVScan_Callback});
-    function buttCVScan_Callback(~,~) 
+    'Callback',{@buttCVScan_Callback, SV_RIP_CV});
+    function buttCVScan_Callback(~,~, SV_RIP_CV) 
         [nameFile, namePath, boolSuccess] = uigetfile( ...
             {'*.xls',  'GC/DMS Data (*.xls)'; ...
             '*.*',  'All Files (*.*)'}, ...
@@ -32,7 +34,7 @@ buttCVScan = uicontrol(objButtonWindow, 'Style','pushbutton',...
             end
             [ Vc, timeStamp, amplitude ] = read_DMS(nameFile(1)); 
             
-            funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile{1});
+            funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile{1}, SV_RIP_CV);
         end
     end
 
@@ -194,7 +196,7 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
     
 end
 
-function funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile)
+function funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile, SV_RIP_CV)
 % Primary Window
 objCVWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
     'none', 'Toolbar', 'figure', 'Position', [.1 0.1 0.80 0.80],...
@@ -241,13 +243,50 @@ PeakDetectionTable = uitable(objCVWindow,...
 set(PeakDetectionTable, 'data', [peaks_vc,peaks_amp', w']);
 set(PeakDetectionTable, 'ColumnWidth', {85});
 med_amp = median(median(amplitude(:,find(Vc<-15))));
-RIP_Vc = Vc(find(mean_amp==max(mean_amp(:,find(Vc<-8)))));
+%RIP_Vc = Vc(find(mean_amp==max(mean_amp(:,find(Vc<-8)))));
+[~, RIP_index] = min(abs(peaks_vc-SV_RIP_CV(1)));
+[~, Junk_index] = min(abs(peaks_vc));
+RIP_Vc = peaks_vc(RIP_index);
+Junk_Vc = peaks_vc(Junk_index);
+RIP_amp = pks(RIP_index);
+Junk_amp = pks(Junk_index);
 uicontrol(objCVWindow,'Style','Text', 'String', ['Median backgroud amplitude: ', num2str(med_amp)],...
                            'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.45, 0.4, 0.1])
-uicontrol(objCVWindow,'Style','Text', 'String', ['Location of RIP: ', num2str(RIP_Vc), ' V'],...
-                           'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
+if ( (RIP_Vc> (SV_RIP_CV(1) + 3*SV_RIP_CV(2)) ) || ( RIP_Vc< (SV_RIP_CV(1) - 3*SV_RIP_CV(2)) )  )
+    uicontrol(objCVWindow,'Style','Text', 'String', ['Location of RIP: ', num2str(RIP_Vc), ' V'],...
+                               'Fontsize',14,'ForegroundColor', 'r', 'Units', 'normalized', 'HorizontalAlignment',...
+                                    'left','Position', [0.75, 0.4, 0.4, 0.1])
+else
+    uicontrol(objCVWindow,'Style','Text', 'String', ['Location of RIP: ', num2str(RIP_Vc), ' V'],...
+                           'Fontsize',14,'ForegroundColor', 'g', 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.4, 0.4, 0.1])
+end
+
+uicontrol(objCVWindow,'Style','Text', 'String', ['RIP Amplitude: ', num2str(RIP_amp), ' pA'],...
+                           'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
+                                'left','Position', [0.75, 0.35, 0.4, 0.1])
+uicontrol(objCVWindow,'Style','Text', 'String', ['Contamination Amplitude: ', num2str(Junk_amp), ' pA'],...
+                           'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
+                                'left','Position', [0.75, 0.3, 0.4, 0.1])
+if ( (RIP_amp - Junk_amp) < 20)
+    uicontrol(objCVWindow,'Style','Text', 'String', ['RIP - Contamination: ', num2str(RIP_amp - Junk_amp), ' pA'],...
+                               'Fontsize',14,'ForegroundColor', 'r', 'Units', 'normalized', 'HorizontalAlignment',...
+                                    'left','Position', [0.75, 0.25, 0.4, 0.1])
+else
+    uicontrol(objCVWindow,'Style','Text', 'String', ['RIP - Contamination: ', num2str(RIP_amp - Junk_amp), ' pA'],...
+                               'Fontsize',14,'ForegroundColor', 'g', 'Units', 'normalized', 'HorizontalAlignment',...
+                                    'left','Position', [0.75, 0.25, 0.4, 0.1])
+end
+
+if ( (RIP_Vc> (SV_RIP_CV(1) + 3*SV_RIP_CV(2)) ) || ( RIP_Vc< (SV_RIP_CV(1) - 3*SV_RIP_CV(2)) )  )
+    uiwait(msgbox(sprintf('CV of the RIP is out of the expected range!\nTo troubleshoot: \n1. Wait 5 minutes for the system to heat up (38-42%cC) and try another CV scan\n2. If issues persist, contact Flore or Dylan for guidance.', char(176)), 'RIP CV ERROR', 'error', 'modal'));
+end
+
+if ( (RIP_amp - Junk_amp) < 20)
+    uiwait(msgbox(sprintf('There is too much contamination in the system!\nTo troubleshoot: \n1. Wait 5 minutes for the system to heat up (38-42%cC) and try another CV scan\n2. If issues persist, contact Flore or Dylan for guidance.', char(176)), 'CONTAMINATION ERROR', 'error', 'modal'));
+end
+
 fig_mean = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
     'none', 'Toolbar', 'figure', 'Position', [.7 0.7 0.20 0.20]);
 objAxisCV_mean = axes(fig_mean,'Position',[.05,.07,.67,.85]);
@@ -291,117 +330,148 @@ grid off
 xlabel('Compensation Voltage (V)');
 ylabel('Separation Voltage (V)');
 zlabel('Intensity (mA)');
+zlim([-1, 200]);
 title('Dispersion Plot');
 Sv_600 = find(Sv==600);
 amp_6 = amplitude(Sv_600,:);
-[pks, locs, w6, p] = findpeaks(mean_amp, 'WidthReference', 'halfheight', 'MinPeakProminence',4);
+[pks, locs, w6, p] = findpeaks(amp_6, 'WidthReference', 'halfheight', 'MinPeakProminence',4);
 %peaks_vc_6 = Vc(find(islocalmax(amp_6, 'MinProminence',4)));
 peaks_vc_6 = Vc(locs);
-peaks_amp_6 = amp_6(find(islocalmax(amp_6, 'MinProminence',4)));
+%peaks_amp_6 = amp_6(find(islocalmax(amp_6, 'MinProminence',4)));
+peaks_amp_6 = amp_6(locs);
 PeakDetectionTable600 = uitable(objDispersionWindow,...
-                      'ColumnName', {'Peak Vc','Peak Amplitude' },...
+                      'ColumnName', {'Peak Vc','Peak Amplitude', 'FWHM' },...
                       'ColumnFormat', {'char' 'char'},...
                       'Units', 'normalized',...
                       'ColumnEditable', false,...
                       'Position', [.75 .8 .2 .1],...
                       'CellSelectionCallback', {@peak_detection_table_clicked});
 % Put contents of sample names into talble and adjusts width
-set(PeakDetectionTable600, 'data', [peaks_vc_6 ,peaks_amp_6']);
-set(PeakDetectionTable600, 'ColumnWidth', {137});
-uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 600s Slice',...
+set(PeakDetectionTable600, 'data', [peaks_vc_6 ,peaks_amp_6', w6']);
+set(PeakDetectionTable600, 'ColumnWidth', {85});
+uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 600SV Slice',...
                            'Fontsize',10, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.9, 0.1, 0.03])
-fig_600 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
-    'none', 'Toolbar', 'figure', 'Position', [.7 0.7 0.20 0.20]);
-objAxisCV_600 = axes(fig_600,'Position',[.05,.07,.67,.85]);
+
+fig_dispersion = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
+    'none', 'Toolbar', 'figure', 'Position', [.1 0.1 0.80 0.80]);
+objAxisCV_600 = axes(fig_dispersion, 'Units', 'normalized','Position',[.05,.55,.4,.4]);
 axes(objAxisCV_600);
 plot(Vc,amplitude(Sv_600,:));
 xlabel('Compensation Voltage (V)');
 ylabel('Intensity (mA)');
+ylim([-1, 200]);
 title('CV vs. Amplitude at 600V SV');
+hold on;
 
 Sv_800 = find(Sv==800);
 amp_8 = amplitude(Sv_800,:);
-peaks_vc_8 = Vc(find(islocalmax(amp_8, 'MinProminence',4)));
-peaks_amp_8 = amp_8(find(islocalmax(amp_8, 'MinProminence',4)));
+[pks, locs, w8, p] = findpeaks(amp_8, 'WidthReference', 'halfheight', 'MinPeakProminence',4);
+peaks_vc_8 = Vc(locs);
+peaks_amp_8 = amp_8(locs);
+%peaks_vc_8 = Vc(find(islocalmax(amp_8, 'MinProminence',4)));
+%peaks_amp_8 = amp_8(find(islocalmax(amp_8, 'MinProminence',4)));
+
 PeakDetectionTable800 = uitable(objDispersionWindow,...
-                      'ColumnName', {'Peak Vc','Peak Amplitude' },...
+                      'ColumnName', {'Peak Vc','Peak Amplitude', 'FWHM' },...
                       'ColumnFormat', {'char' 'char'},...
                       'Units', 'normalized',...
                       'ColumnEditable', false,...
                       'Position', [.75 .6 .2 .1],...
                       'CellSelectionCallback', {@peak_detection_table_clicked});
 % Put contents of sample names into talble and adjusts width
-set(PeakDetectionTable800, 'data', [peaks_vc_8 ,peaks_amp_8']);
-set(PeakDetectionTable800, 'ColumnWidth', {137});
-uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 800s Slice',...
+set(PeakDetectionTable800, 'data', [peaks_vc_8 ,peaks_amp_8', w8']);
+set(PeakDetectionTable800, 'ColumnWidth', {85});
+uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 800SV Slice',...
                            'Fontsize',10, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.7, 0.1, 0.03])
-fig_800 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
-    'none', 'Toolbar', 'figure', 'Position', [.7 0.5 0.20 0.20]);
-objAxisCV_800 = axes(fig_800,'Position',[.05,.07,.67,.85]);
+%fig_800 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
+%    'none', 'Toolbar', 'figure', 'Position', [.7 0.5 0.20 0.20]);
+objAxisCV_800 = axes(fig_dispersion,'Position',[.5,.55,.4,.4]);
 axes(objAxisCV_800);
 plot(Vc,amplitude(Sv_800,:));
 xlabel('Compensation Voltage (V)');
 ylabel('Intensity (mA)');
+ylim([-1, 200]);
 title('CV vs. Amplitude at 800V SV');
 
 Sv_1000 = find(Sv==1000);
 amp_10 = amplitude(Sv_1000,:);
-peaks_vc_10 = Vc(find(islocalmax(amp_10, 'MinProminence',4)));
-peaks_amp_10 = amp_10(find(islocalmax(amp_10, 'MinProminence',4)));
+[pks, locs, w10, p] = findpeaks(amp_10, 'WidthReference', 'halfheight', 'MinPeakProminence',4);
+peaks_vc_10 = Vc(locs);
+peaks_amp_10 = amp_10(locs);
+%peaks_vc_10 = Vc(find(islocalmax(amp_10, 'MinProminence',4)));
+%peaks_amp_10 = amp_10(find(islocalmax(amp_10, 'MinProminence',4)));
 PeakDetectionTable1000 = uitable(objDispersionWindow,...
-                      'ColumnName', {'Peak Vc','Peak Amplitude' },...
+                      'ColumnName', {'Peak Vc','Peak Amplitude', 'FWHM' },...
                       'ColumnFormat', {'char' 'char'},...
                       'Units', 'normalized',...
                       'ColumnEditable', false,...
                       'Position', [.75 .4 .2 .1],...
                       'CellSelectionCallback', {@peak_detection_table_clicked});
 % Put contents of sample names into talble and adjusts width
-set(PeakDetectionTable1000, 'data', [peaks_vc_10 ,peaks_amp_10']);
-set(PeakDetectionTable1000, 'ColumnWidth', {137});
-uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 1000s Slice',...
+set(PeakDetectionTable1000, 'data', [peaks_vc_10 ,peaks_amp_10', w10']);
+set(PeakDetectionTable1000, 'ColumnWidth', {85});
+uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 1000SV Slice',...
                            'Fontsize',10, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.5, 0.1, 0.03])
-fig_1000 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
-    'none', 'Toolbar', 'figure', 'Position', [.7 0.3 0.20 0.20]);
-objAxisCV_1000 = axes(fig_1000,'Position',[.05,.07,.67,.85]);
+%fig_1000 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
+%    'none', 'Toolbar', 'figure', 'Position', [.7 0.3 0.20 0.20]);
+objAxisCV_1000 = axes(fig_dispersion,'Position',[.05,.07,.4,.4]);
 axes(objAxisCV_1000);
 plot(Vc,amplitude(Sv_1000,:));
 xlabel('Compensation Voltage (V)');
 ylabel('Intensity (mA)');
+ylim([-1, 200]);
 title('CV vs. Amplitude at 1000V SV');
 
 Sv_1200 = find(Sv==1200);
 amp_12 = amplitude(Sv_1200,:);
-peaks_vc_12 = Vc(find(islocalmax(amp_12, 'MinProminence',4)));
-peaks_amp_12 = amp_12(find(islocalmax(amp_12, 'MinProminence',4)));
+[pks, locs, w12, p] = findpeaks(amp_12, 'WidthReference', 'halfheight', 'MinPeakProminence',4);
+peaks_vc_12 = Vc(locs);
+[~, RIP_index] = min(abs(peaks_vc_12+12));
+[~, Junk_index] = min(abs(peaks_vc_12));
+RIP_Vc = peaks_vc_12(RIP_index);
+
+Junk_Vc = peaks_vc_12(Junk_index);
+RIP_amp = pks(RIP_index);
+Junk_amp = pks(Junk_index);
+
+
+peaks_amp_12 = amp_12(locs);
+%peaks_vc_12 = Vc(find(islocalmax(amp_12, 'MinProminence',4)));
+%peaks_amp_12 = amp_12(find(islocalmax(amp_12, 'MinProminence',4)));
 PeakDetectionTable1200 = uitable(objDispersionWindow,...
-                      'ColumnName', {'Peak Vc','Peak Amplitude' },...
+                      'ColumnName', {'Peak Vc','Peak Amplitude','FWHM' },...
                       'ColumnFormat', {'char' 'char'},...
                       'Units', 'normalized',...
                       'ColumnEditable', false,...
                       'Position', [.75 .2 .2 .1],...
                       'CellSelectionCallback', {@peak_detection_table_clicked});
 % Put contents of sample names into talble and adjusts width
-set(PeakDetectionTable1200, 'data', [peaks_vc_12 ,peaks_amp_12']);
-set(PeakDetectionTable1200, 'ColumnWidth', {137});
-uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 1200s Slice',...
+set(PeakDetectionTable1200, 'data', [peaks_vc_12 ,peaks_amp_12', w12']);
+set(PeakDetectionTable1200, 'ColumnWidth', {85});
+uicontrol(objDispersionWindow,'Style','Text', 'String', 'Peaks at 1200SV Slice',...
                            'Fontsize',10, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.3, 0.1, 0.03])
-fig_1200 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
-    'none', 'Toolbar', 'figure', 'Position', [.7 0.1 0.20 0.20]);
-objAxisCV_1200 = axes(fig_1200,'Position',[.05,.07,.67,.85]);
+%fig_1200 = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
+ %   'none', 'Toolbar', 'figure', 'Position', [.7 0.1 0.20 0.20]);
+objAxisCV_1200 = axes(fig_dispersion,'Position',[.5,.07,.4,.4]);
 axes(objAxisCV_1200);
 plot(Vc,amplitude(Sv_1200,:));
 xlabel('Compensation Voltage (V)');
 ylabel('Intensity (mA)');
+ylim([-1, 200]);
 title('CV vs. Amplitude at 1200V SV');
 
 med_amp = median(median(amplitude(find(Sv<800),find(Vc<-15))));
 uicontrol(objDispersionWindow,'Style','Text', 'String', ['Median backgroud amplitude: ', num2str(med_amp)],...
                            'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.05, 0.4, 0.1])
+
+if ( (RIP_amp - Junk_amp) < 20)
+    uiwait(msgbox('There is too much contamination in the system! Please contact Flore or Dylan for guidance.', 'CONTAMINATION ERROR', 'error', 'modal'));
+end
 end
 
 function funcGCDMSWindow(Vc, timeStamp, amplitude, nameFile)
@@ -427,15 +497,19 @@ textCurrFile = uicontrol('Style','text', 'String',nameFile,...
     'Units', 'normalized', ...
     'HorizontalAlignment', 'left',...
     'Position',[.03 .96 .44 .03 ]);
-CV_Scan_surf = surf(Vc',timeStamp, amplitude, 'EdgeColor', 'none');
+CV_Scan_surf = surf(Vc',timeStamp, amplitude, 'EdgeColor', 'none','FaceColor',[0.5,0.5,0.5]);
 set(objGCDMSWindow,'Visible','on');
 grid off
 xlabel('Compensation Voltage (V)');
 ylabel('Retention Time (s)');
 zlabel('Intensity (mA)');
+zlim([-1, 200]);
 title('GC-DMS Plot');
+hold on;
 
 peak_range = find(Vc>-3 & Vc<4);
+peak_range_surf = surf(Vc(peak_range)',timeStamp, amplitude(:, peak_range), 'EdgeColor', 'none');
+
 mean_amp = mean(amplitude(:,peak_range),2);
 peaks_rt = timeStamp(find(islocalmax(mean_amp, 'MinProminence',4)));
 peaks_amp = mean_amp(find(islocalmax(mean_amp, 'MinProminence',4)));

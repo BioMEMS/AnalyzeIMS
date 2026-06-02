@@ -1,6 +1,8 @@
 %% QA/QC Script
 function QAQC_Script
 close all;
+%global mean_RIP_CV STD_RIP_CV
+SV_RIP_CV = [-11.33, 0.259]; %Mean and STD CV for RIP in SV scans (1200 SV)
 % Primary Window
 objButtonWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
     'none', 'Toolbar', 'figure', 'Position', [.1 0.1 0.10 0.20],...
@@ -12,10 +14,10 @@ objButtonWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
 set(objButtonWindow,'Visible','on');
 buttCVScan = uicontrol(objButtonWindow, 'Style','pushbutton',...
     'Units', 'normalized',...
-    'String','Analyze CV Scan',...
+    'String','Analyze SV Scan',...
     'Position',[.25 .8 .5 .1],...
-    'Callback',{@buttCVScan_Callback});
-    function buttCVScan_Callback(~,~) 
+    'Callback',{@buttCVScan_Callback, SV_RIP_CV});
+    function buttCVScan_Callback(~,~, SV_RIP_CV) 
         [nameFile, namePath, boolSuccess] = uigetfile( ...
             {'*.xls',  'GC/DMS Data (*.xls)'; ...
             '*.*',  'All Files (*.*)'}, ...
@@ -32,7 +34,7 @@ buttCVScan = uicontrol(objButtonWindow, 'Style','pushbutton',...
             end
             [ Vc, timeStamp, amplitude ] = read_DMS(nameFile(1)); 
             
-            funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile{1});
+            funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile{1}, SV_RIP_CV);
         end
     end
 
@@ -194,7 +196,7 @@ function [ Vc, timeStamp, amplitude ] = read_DMS(filename)
     
 end
 
-function funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile)
+function funcCVSCanWindow(Vc, timeStamp, amplitude, nameFile, SV_RIP_CV)
 % Primary Window
 objCVWindow = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
     'none', 'Toolbar', 'figure', 'Position', [.1 0.1 0.80 0.80],...
@@ -241,13 +243,50 @@ PeakDetectionTable = uitable(objCVWindow,...
 set(PeakDetectionTable, 'data', [peaks_vc,peaks_amp', w']);
 set(PeakDetectionTable, 'ColumnWidth', {85});
 med_amp = median(median(amplitude(:,find(Vc<-15))));
-RIP_Vc = Vc(find(mean_amp==max(mean_amp(:,find(Vc<-8)))));
+%RIP_Vc = Vc(find(mean_amp==max(mean_amp(:,find(Vc<-8)))));
+[~, RIP_index] = min(abs(peaks_vc-SV_RIP_CV(1)));
+[~, Junk_index] = min(abs(peaks_vc));
+RIP_Vc = peaks_vc(RIP_index);
+Junk_Vc = peaks_vc(Junk_index);
+RIP_amp = pks(RIP_index);
+Junk_amp = pks(Junk_index);
 uicontrol(objCVWindow,'Style','Text', 'String', ['Median backgroud amplitude: ', num2str(med_amp)],...
                            'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.45, 0.4, 0.1])
-uicontrol(objCVWindow,'Style','Text', 'String', ['Location of RIP: ', num2str(RIP_Vc), ' V'],...
-                           'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
+if ( (RIP_Vc> (SV_RIP_CV(1) + 3*SV_RIP_CV(2)) ) || ( RIP_Vc< (SV_RIP_CV(1) - 3*SV_RIP_CV(2)) )  )
+    uicontrol(objCVWindow,'Style','Text', 'String', ['Location of RIP: ', num2str(RIP_Vc), ' V'],...
+                               'Fontsize',14,'ForegroundColor', 'r', 'Units', 'normalized', 'HorizontalAlignment',...
+                                    'left','Position', [0.75, 0.4, 0.4, 0.1])
+else
+    uicontrol(objCVWindow,'Style','Text', 'String', ['Location of RIP: ', num2str(RIP_Vc), ' V'],...
+                           'Fontsize',14,'ForegroundColor', 'g', 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.4, 0.4, 0.1])
+end
+
+uicontrol(objCVWindow,'Style','Text', 'String', ['RIP Amplitude: ', num2str(RIP_amp), ' pA'],...
+                           'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
+                                'left','Position', [0.75, 0.35, 0.4, 0.1])
+uicontrol(objCVWindow,'Style','Text', 'String', ['Contamination Amplitude: ', num2str(Junk_amp), ' pA'],...
+                           'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
+                                'left','Position', [0.75, 0.3, 0.4, 0.1])
+if ( (RIP_amp - Junk_amp) < 20)
+    uicontrol(objCVWindow,'Style','Text', 'String', ['RIP - Contamination: ', num2str(RIP_amp - Junk_amp), ' pA'],...
+                               'Fontsize',14,'ForegroundColor', 'r', 'Units', 'normalized', 'HorizontalAlignment',...
+                                    'left','Position', [0.75, 0.25, 0.4, 0.1])
+else
+    uicontrol(objCVWindow,'Style','Text', 'String', ['RIP - Contamination: ', num2str(RIP_amp - Junk_amp), ' pA'],...
+                               'Fontsize',14,'ForegroundColor', 'g', 'Units', 'normalized', 'HorizontalAlignment',...
+                                    'left','Position', [0.75, 0.25, 0.4, 0.1])
+end
+
+if ( (RIP_Vc> (SV_RIP_CV(1) + 3*SV_RIP_CV(2)) ) || ( RIP_Vc< (SV_RIP_CV(1) - 3*SV_RIP_CV(2)) )  )
+    uiwait(msgbox(sprintf('CV of the RIP is out of the expected range!\nTo troubleshoot: \n1. Wait 5 minutes for the system to heat up (38-42%cC) and try another CV scan\n2. If issues persist, use the slack channel to ask for help.', char(176)), 'RIP CV ERROR', 'error', 'modal'));
+end
+
+if ( (RIP_amp - Junk_amp) < 20)
+    uiwait(msgbox(sprintf('There is too much contamination in the system!\nTo troubleshoot: \n1. Wait 5 minutes for the system to heat up (38-42%cC) and try another CV scan\n2. If issues persist, use the slack channel to ask for help.', char(176)), 'CONTAMINATION ERROR', 'error', 'modal'));
+end
+
 fig_mean = figure('Visible','off', 'Units', 'normalized', 'MenuBar',...
     'none', 'Toolbar', 'figure', 'Position', [.7 0.7 0.20 0.20]);
 objAxisCV_mean = axes(fig_mean,'Position',[.05,.07,.67,.85]);
@@ -390,6 +429,15 @@ Sv_1200 = find(Sv==1200);
 amp_12 = amplitude(Sv_1200,:);
 [pks, locs, w12, p] = findpeaks(amp_12, 'WidthReference', 'halfheight', 'MinPeakProminence',4);
 peaks_vc_12 = Vc(locs);
+[~, RIP_index] = min(abs(peaks_vc_12+12));
+[~, Junk_index] = min(abs(peaks_vc_12));
+RIP_Vc = peaks_vc_12(RIP_index);
+
+Junk_Vc = peaks_vc_12(Junk_index);
+RIP_amp = pks(RIP_index);
+Junk_amp = pks(Junk_index);
+
+
 peaks_amp_12 = amp_12(locs);
 %peaks_vc_12 = Vc(find(islocalmax(amp_12, 'MinProminence',4)));
 %peaks_amp_12 = amp_12(find(islocalmax(amp_12, 'MinProminence',4)));
@@ -420,6 +468,10 @@ med_amp = median(median(amplitude(find(Sv<800),find(Vc<-15))));
 uicontrol(objDispersionWindow,'Style','Text', 'String', ['Median backgroud amplitude: ', num2str(med_amp)],...
                            'Fontsize',14, 'Units', 'normalized', 'HorizontalAlignment',...
                                 'left','Position', [0.75, 0.05, 0.4, 0.1])
+
+if ( (RIP_amp - Junk_amp) < 20)
+    uiwait(msgbox('There is too much contamination in the system! Please contact Flore or Dylan for guidance.', 'CONTAMINATION ERROR', 'error', 'modal'));
+end
 end
 
 function funcGCDMSWindow(Vc, timeStamp, amplitude, nameFile)

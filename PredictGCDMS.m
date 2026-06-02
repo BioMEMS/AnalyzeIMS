@@ -325,6 +325,30 @@ function pk_save_button_clicked(source, event)
     peak_excel = horzcat(peak_excel, vertcat(sample_labels,peak_table'));
     save('peak_table.mat','peak_table','peak_cv','peak_rt')
     writematrix(peak_excel, "peak_table.csv");
+    if ~isfolder('Segmentation_Masks')
+        mkdir('Segmentation_Masks')
+    end
+    for i = 1:size(gcdms.sample_names,1)
+        processed_cv = gcdms.compensation_voltage{i};
+        processed_rt = gcdms.retention_time{i};
+        processed_rt = [0; processed_rt];
+        processed_int = gcdms.intensity{i};
+        processed_file = [processed_cv'; processed_int];
+        processed_file = [processed_rt, processed_file];
+        writematrix(processed_file, strcat('Segmentation_Masks/',gcdms.sample_names{i}, '_processed.csv'));
+
+        mask_cv = gcdms.compensation_voltage{i};
+        mask_rt = gcdms.retention_time{i};
+        mask_rt = [0; mask_rt];
+        mask_int = gcdms.get_watershed_label(i);
+        mask_file = [mask_cv'; mask_int];
+        mask_file = [mask_rt, mask_file];
+        writematrix(mask_file, strcat('Segmentation_Masks/',gcdms.sample_names{i}, '_mask.csv'));
+
+
+    end
+        
+
 end
 
 peak_table = peak_table.set_button('Generate Peak Table', @peak_table_button_clicked);
